@@ -4,10 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "MaskTypes.h"
 #include "RGBMaskCharacter.generated.h"
+
 
 class UCameraComponent;
 class USpringArmComponent;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMaskChanged, EMaskType);
 
 /**
  *  A controllable top-down perspective character
@@ -27,6 +31,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
+	UPROPERTY(EditAnywhere, Category = "Mask")
+	EMaskType CurrentMask = EMaskType::Red;
+
 public:
 
 	/** Constructor */
@@ -43,6 +50,11 @@ public:
 
 	/** Returns the Camera Boom component **/
 	USpringArmComponent* GetCameraBoom() const { return CameraBoom.Get(); }
+
+	EMaskType GetMask() const { return CurrentMask; }
+	void SetMask(EMaskType NewMask);
+
+	FOnMaskChanged OnMaskChanged;
 
 };
 

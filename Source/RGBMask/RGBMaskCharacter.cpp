@@ -50,7 +50,7 @@ ARGBMaskCharacter::ARGBMaskCharacter()
 void ARGBMaskCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	OnMaskChanged.Broadcast(CurrentMask);
 	// stub
 }
 
@@ -59,4 +59,11 @@ void ARGBMaskCharacter::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
 
 	// stub
+}
+
+void ARGBMaskCharacter::SetMask(EMaskType NewMask)
+{
+	if (CurrentMask == NewMask) return;
+	CurrentMask = NewMask;
+	OnMaskChanged.Broadcast(CurrentMask);
 }
