@@ -79,10 +79,10 @@ void ARGBMaskPlayerController::OnSetDestinationTriggered()
 {
 	// We flag that the input is being pressed
 	FollowTime += GetWorld()->GetDeltaSeconds();
-
+	
 	// Update the move destination to wherever the cursor is pointing at
 	UpdateCachedDestination();
-
+	
 	// Move towards mouse pointer or touch
 	APawn* ControlledPawn = GetPawn();
 	if (ControlledPawn != nullptr)
@@ -123,31 +123,20 @@ void ARGBMaskPlayerController::OnMove(const FInputActionValue& Value)
 	// Get the 2D input vector
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 
-	/*if (APawn* ControlledPawn = GetPawn())
-	{*/
-	//// Get the camera rotation to determine forward and right directions
-	//const FRotator CameraRotation = PlayerCameraManager->GetCameraRotation();
-	//const FRotator YawRotation(0, CameraRotation.Yaw, 0);
-
-	//// Get forward and right vectors based on camera rotation
-	//const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	//const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-	//// Add movement input
-	//ControlledPawn->AddMovementInput(ForwardDirection, MovementVector.Y);
-	//ControlledPawn->AddMovementInput(RightDirection, MovementVector.X);
-
-//}
 	if (APawn* ControlledPawn = GetPawn())
 	{
-		// Versión alternativa: Y como forward, X como right
-		const FVector RightDirection = FVector(0.0f, 1.0f, 0.0f);
-		const FVector ForwardDirection = FVector(1.0f, 0.0f, 0.0f);
+		// Get the camera rotation to determine forward and right directions
+		const FRotator CameraRotation = PlayerCameraManager->GetCameraRotation();
+		const FRotator YawRotation(0, CameraRotation.Yaw, 0);
 
+		// Get forward and right vectors based on camera rotation
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// Add movement input
 		ControlledPawn->AddMovementInput(ForwardDirection, MovementVector.Y);
 		ControlledPawn->AddMovementInput(RightDirection, MovementVector.X);
 	}
-
 }
 
 void ARGBMaskPlayerController::UpdateCachedDestination()
