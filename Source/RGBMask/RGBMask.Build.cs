@@ -15,8 +15,10 @@ public class RGBMask : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"AIModule",
+			"NavigationSystem",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
+			"Niagara",
 			"UMG",
 			"Slate"
 		});
@@ -25,19 +27,12 @@ public class RGBMask : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"RGBMask",
-			"RGBMask/Variant_Platforming",
-			"RGBMask/Variant_Platforming/Animation",
-			"RGBMask/Variant_Combat",
-			"RGBMask/Variant_Combat/AI",
-			"RGBMask/Variant_Combat/Animation",
-			"RGBMask/Variant_Combat/Gameplay",
-			"RGBMask/Variant_Combat/Interfaces",
-			"RGBMask/Variant_Combat/UI",
-			"RGBMask/Variant_SideScrolling",
-			"RGBMask/Variant_SideScrolling/AI",
-			"RGBMask/Variant_SideScrolling/Gameplay",
-			"RGBMask/Variant_SideScrolling/Interfaces",
-			"RGBMask/Variant_SideScrolling/UI"
+			"RGBMask/Variant_Strategy",
+			"RGBMask/Variant_Strategy/UI",
+			"RGBMask/Variant_TwinStick",
+			"RGBMask/Variant_TwinStick/AI",
+			"RGBMask/Variant_TwinStick/Gameplay",
+			"RGBMask/Variant_TwinStick/UI"
 		});
 
 		// Uncomment if you are using Slate UI

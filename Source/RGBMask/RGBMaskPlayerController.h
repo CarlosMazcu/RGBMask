@@ -3,50 +3,83 @@
 #pragma once
 
 #include "CoreMinimal.h"
+//#include "Templates/SubclassOf.h"
 #include "GameFramework/PlayerController.h"
 #include "RGBMaskPlayerController.generated.h"
 
+class UNiagaraSystem;
 class UInputMappingContext;
-class UUserWidget;
+class UInputAction;
+class UPathFollowingComponent;
+
+DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 /**
- *  Basic PlayerController class for a third person game
- *  Manages input mappings
+ *  Player controller for a top-down perspective game.
+ *  Implements point and click based controls
  */
 UCLASS(abstract)
 class ARGBMaskPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 protected:
 
-	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
-	TArray<UInputMappingContext*> DefaultMappingContexts;
+	/** Component used for moving along a NavMesh path. */
+	UPROPERTY(VisibleDefaultsOnly, Category = AI)
+	TObjectPtr<UPathFollowingComponent> PathFollowingComponent;
 
-	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
-	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
+	/** Time Threshold to know if it was a short press */
+	UPROPERTY(EditAnywhere, Category="Input")
+	float ShortPressThreshold;
 
-	/** Mobile controls widget to spawn */
-	UPROPERTY(EditAnywhere, Category="Input|Touch Controls")
-	TSubclassOf<UUserWidget> MobileControlsWidgetClass;
+	/** FX Class that we will spawn when clicking */
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UNiagaraSystem> FXCursor;
 
-	/** Pointer to the mobile controls widget */
-	UPROPERTY()
-	TObjectPtr<UUserWidget> MobileControlsWidget;
+	/** MappingContext */
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
+	
+	/** Jump Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> SetDestinationClickAction;
 
-	/** If true, the player will use UMG touch controls even if not playing on mobile platforms */
-	UPROPERTY(EditAnywhere, Config, Category = "Input|Touch Controls")
-	bool bForceTouchControls = false;
+	/** Jump Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> SetDestinationTouchAction;
 
-	/** Gameplay initialization */
-	virtual void BeginPlay() override;
+	/** True if the controlled character should navigate to the mouse cursor. */
+	uint32 bMoveToMouseCursor : 1;
 
-	/** Input mapping context setup */
+	/** Set to true if we're using touch input */
+	uint32 bIsTouch : 1;
+
+	/** Saved location of the character movement destination */
+	FVector CachedDestination;
+
+	/** Time that the click input has been pressed */
+	float FollowTime = 0.0f;
+
+public:
+
+	/** Constructor */
+	ARGBMaskPlayerController();
+
+protected:
+
+	/** Initialize input bindings */
 	virtual void SetupInputComponent() override;
+	
+	/** Input handlers */
+	void OnInputStarted();
+	void OnSetDestinationTriggered();
+	void OnSetDestinationReleased();
+	void OnTouchTriggered();
+	void OnTouchReleased();
 
-	/** Returns true if the player should use UMG touch controls */
-	bool ShouldUseTouchControls() const;
-
+	/** Helper function to get the move destination */
+	void UpdateCachedDestination();
 };
+
+

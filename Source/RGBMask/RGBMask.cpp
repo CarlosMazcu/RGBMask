@@ -6,3 +6,4 @@
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, RGBMask, "RGBMask" );
 
 DEFINE_LOG_CATEGORY(LogRGBMask)
+ 

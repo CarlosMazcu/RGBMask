@@ -7,7 +7,9 @@
 #include "RGBMaskGameMode.generated.h"
 
 /**
- *  Simple GameMode for a third person game
+ *  Simple Game Mode for a top-down perspective game
+ *  Sets the default gameplay framework classes
+ *  Check the Blueprint derived class for the set values
  */
 UCLASS(abstract)
 class ARGBMaskGameMode : public AGameModeBase
@@ -15,7 +17,7 @@ class ARGBMaskGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	
+
 	/** Constructor */
 	ARGBMaskGameMode();
 };
