@@ -205,11 +205,25 @@ void ARGBMaskPlayerController::OnChangeGreenMask()
 
 void ARGBMaskPlayerController::ToggleMask(EMaskType DesiredMask, ARGBMaskCharacter* MaskCharacter)
 {
-
+	if (!MaskCharacter) return;
+	if (!bCanToggleMask) return;
 	const EMaskType Current = MaskCharacter->GetMask();
-
 	const EMaskType NewMask = (Current == DesiredMask) ? EMaskType::None : DesiredMask;
 	MaskCharacter->SetMask(NewMask);
+	if (NewMask == Current)
+		return;
+	bCanToggleMask = false;
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			MaskToggleCooldownHandle,
+			this,
+			&ARGBMaskPlayerController::ResetMaskToggleCooldown,
+			MaskToggleCooldownSeconds,
+			false
+		);
+	}
 }
 
 void ARGBMaskPlayerController::UpdateCachedDestination()
@@ -231,4 +245,9 @@ void ARGBMaskPlayerController::UpdateCachedDestination()
 	{
 		CachedDestination = Hit.Location;
 	}
+}
+
+void ARGBMaskPlayerController::ResetMaskToggleCooldown()
+{
+	bCanToggleMask = true;
 }

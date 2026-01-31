@@ -6,13 +6,13 @@
 #include "MaskTypes.h"
 //#include "Templates/SubclassOf.h"
 #include "GameFramework/PlayerController.h"
+#include "TimerManager.h"
 #include "RGBMaskPlayerController.generated.h"
 
 class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
 class UPathFollowingComponent;
-class ARGBMaskCharacter;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -96,10 +96,18 @@ protected:
 	void OnChangeBlueMask();
 	void OnChangeGreenMask();
 
-	void ToggleMask(EMaskType DesiredMask, ARGBMaskCharacter* MaskCharacter);
+	void ToggleMask(EMaskType DesiredMask, class ARGBMaskCharacter* MaskCharacter);
 
 	/** Helper function to get the move destination */
 	void UpdateCachedDestination();
+private:
+	UPROPERTY(EditAnywhere, Category = "Mask|Cooldown", meta = (ClampMin = "0.0"))
+	float MaskToggleCooldownSeconds = 0.5f;
+
+	bool bCanToggleMask = true;
+	FTimerHandle MaskToggleCooldownHandle;
+
+	void ResetMaskToggleCooldown();
 };
 
 
