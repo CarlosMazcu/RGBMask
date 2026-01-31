@@ -7,64 +7,133 @@
 
 ARGBMaskCameraManager::ARGBMaskCameraManager()
 {
-	PreviousCameraVolume = nullptr;
-	ActiveCameraVolume = nullptr;
+    PreviousCameraVolume = nullptr;
+    ActiveCameraVolume = nullptr;
+    CurrentCameraLocation = FVector::ZeroVector;
+    CurrentCameraRotation = FRotator::ZeroRotator;
 }
 
 void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTime)
 {
-	// Inicializar volumenes si es necesario
-	if (!bVolumesInitialized)
-	{
-		FindCameraVolumes();
-		bVolumesInitialized = true;
-		UE_LOG(LogTemp, Warning, TEXT("[CameraManager] Camera volumes initialized, found %d volumes"), CameraVolumes.Num());
-	}
+    // Inicializar volumenes si es necesario
+    if (!bVolumesInitialized)
+    {
+        FindCameraVolumes();
+        bVolumesInitialized = true;
+        UE_LOG(LogTemp, Warning, TEXT("[CameraManager] Camera volumes initialized, found %d volumes"), CameraVolumes.Num());
+    }
 
-	// Obtener pawn
-	APlayerController* PC = GetOwningPlayerController();
-	APawn* PlayerPawn = PC ? PC->GetPawn() : nullptr;
-	if (!PlayerPawn)
-	{
-		// fallback: comportamiento base
-		Super::UpdateViewTarget(OutVT, DeltaTime);
-		return;
-	}
 
-	const FVector PlayerLocation = PlayerPawn->GetActorLocation();
+    // Obtener pawn
+    APlayerController* PC = GetOwningPlayerController();
+    APawn* PlayerPawn = PC ? PC->GetPawn() : nullptr;
+    // Si el view target no es el pawn del jugador, dejar que Unreal maneje
+    if (ViewTarget.Target != PlayerPawn || PendingViewTarget.Target != nullptr)
+    {
+      Super::UpdateViewTarget(OutVT, DeltaTime);
 
-	// Determinar volumen activo
-	ACameraVolume* NewActiveVolume = GetActiveVolume(PlayerLocation);
+      // Sincronizar posición
+      CurrentCameraLocation = OutVT.POV.Location;
+      CurrentCameraRotation = OutVT.POV.Rotation;
+      bIsTransitioning = false;
 
-	// Manejar cambio de volumen (ocultar/mostrar actores)
-	if (NewActiveVolume != ActiveCameraVolume)
-	{
+      return;
+    }
 
-		HandleVolumeChange(NewActiveVolume);
-		ActiveCameraVolume = NewActiveVolume;
-	}
+    const FVector PlayerLocation = PlayerPawn->GetActorLocation();
 
-	// 1) Base SIN modifiers (muy importante)
-	Super::UpdateViewTargetInternal(OutVT, DeltaTime);
+    // Determinar volumen activo
+    ACameraVolume* NewActiveVolume = GetActiveVolume(PlayerLocation);
 
-	// 2) Tu camara (esto crea la POV "base")
-	ApplyCameraOffset(OutVT, PlayerLocation);
+    // Detectar cambio de volumen
+    if (NewActiveVolume != ActiveCameraVolume)
+    {
+        // IMPORTANTE: Iniciar transición ANTES de cambiar el volumen
+        bIsTransitioning = true;
 
-	// 3) Clamp (recomendado con margen para que el shake no se lo coma)
-	if (ActiveCameraVolume)
-	{
-		constexpr float Slack = 25.f; // ajusta 10-50 segun lo que quieras permitir
-		FVector MinBounds, MaxBounds;
-		ActiveCameraVolume->GetCameraBounds(MinBounds, MaxBounds);
+        UE_LOG(LogTemp, Log, TEXT("[CameraManager] Starting transition from volume %s to %s"),
+            ActiveCameraVolume ? *ActiveCameraVolume->GetName() : TEXT("None"),
+            NewActiveVolume ? *NewActiveVolume->GetName() : TEXT("None"));
 
-		OutVT.POV.Location.X = FMath::Clamp(OutVT.POV.Location.X, MinBounds.X + Slack, MaxBounds.X - Slack);
-		OutVT.POV.Location.Y = FMath::Clamp(OutVT.POV.Location.Y, MinBounds.Y + Slack, MaxBounds.Y - Slack);
-	}
+        HandleVolumeChange(NewActiveVolume);
+        ActiveCameraVolume = NewActiveVolume;
+    }
 
-	// 4) Ahora si: aplica modifiers (shakes, etc.)
-	ApplyCameraModifiers(DeltaTime, OutVT.POV);
+    // 1) Base SIN modifiers
+    Super::UpdateViewTargetInternal(OutVT, DeltaTime);
+
+    // 2) Calcular la posición OBJETIVO de la cámara (donde queremos estar)
+    FTViewTarget TempVT = OutVT; // Crear una copia temporal
+    ApplyCameraOffset(TempVT, PlayerLocation);
+
+    FVector TargetLocation = TempVT.POV.Location;
+    FRotator TargetRotation = TempVT.POV.Rotation;
+
+    // 3) Aplicar clamp al objetivo
+    if (ActiveCameraVolume)
+    {
+        constexpr float Slack = 25.f;
+        FVector MinBounds, MaxBounds;
+        ActiveCameraVolume->GetCameraBounds(MinBounds, MaxBounds);
+
+        TargetLocation.X = FMath::Clamp(TargetLocation.X, MinBounds.X + Slack, MaxBounds.X - Slack);
+        TargetLocation.Y = FMath::Clamp(TargetLocation.Y, MinBounds.Y + Slack, MaxBounds.Y - Slack);
+    }
+
+    // 4) Interpolar hacia el objetivo
+    if (bIsTransitioning)
+    {
+        // Interpolar desde la última posición conocida
+        CurrentCameraLocation = FMath::VInterpTo(
+            CurrentCameraLocation,
+            TargetLocation,
+            DeltaTime,
+            CameraTransitionSpeed
+        );
+
+        if (bInterpolateRotation)
+        {
+            CurrentCameraRotation = FMath::RInterpTo(
+                CurrentCameraRotation,
+                TargetRotation,
+                DeltaTime,
+                CameraTransitionSpeed
+            );
+        }
+        else
+        {
+            CurrentCameraRotation = TargetRotation;
+        }
+
+        // Comprobar si hemos llegado al objetivo
+        float DistanceToTarget = FVector::Dist(CurrentCameraLocation, TargetLocation);
+        if (DistanceToTarget < 1.0f)
+        {
+            bIsTransitioning = false;
+            CurrentCameraLocation = TargetLocation;
+            CurrentCameraRotation = TargetRotation;
+            UE_LOG(LogTemp, Log, TEXT("[CameraManager] Transition completed"));
+        }
+    }
+    else
+    {
+        // No hay transición: usar el objetivo directamente pero con interpolación suave
+        CurrentCameraLocation = FMath::VInterpTo(
+            CurrentCameraLocation,
+            TargetLocation,
+            DeltaTime,
+            CameraTransitionSpeed * 2.0f // Más rápido cuando no hay cambio de volumen
+        );
+        CurrentCameraRotation = TargetRotation;
+    }
+
+    // 5) Aplicar la posición interpolada al viewport
+    OutVT.POV.Location = CurrentCameraLocation;
+    OutVT.POV.Rotation = CurrentCameraRotation;
+
+    // 6) Aplicar modifiers (shakes, etc.)
+    ApplyCameraModifiers(DeltaTime, OutVT.POV);
 }
-
 
 void ARGBMaskCameraManager::FindCameraVolumes()
 {

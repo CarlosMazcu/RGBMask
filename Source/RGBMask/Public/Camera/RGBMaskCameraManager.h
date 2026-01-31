@@ -44,6 +44,13 @@ protected:
     bool bUsePlayerForwardForOffset = true;  
 
 
+    // Transition settings
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Transition", meta = (ToolTip = "Velocidad de interpolación de la cámara entre volúmenes"))
+    float CameraTransitionSpeed = 5.0f; // Ajusta según necesites (más alto = más rápido)
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Transition", meta = (ToolTip = "Si true, interpola también la rotación de la cámara"))
+    bool bInterpolateRotation = true;
+
     // Buscar volúmenes en el nivel
     void FindCameraVolumes();
 
@@ -60,4 +67,13 @@ protected:
 
 private:
     bool bVolumesInitialized = false;
+
+    // Transition state
+    bool bIsTransitioning = false;
+    FVector CurrentCameraLocation; 
+    FRotator CurrentCameraRotation;
+    FVector TransitionStartLocation;
+    FRotator TransitionStartRotation;
+    FVector TransitionTargetLocation;
+    FRotator TransitionTargetRotation;
 };
