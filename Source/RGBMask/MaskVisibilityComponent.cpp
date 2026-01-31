@@ -30,7 +30,23 @@ void UMaskVisibilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UMaskVisibilityComponent::ApplyMask(EMaskType Mask)
 {
-    const bool bShouldBeHidden = HiddenInMask.Contains(Mask);
+    bool bShouldBeHidden = false;
+
+    // Determinar si debe estar oculto según el modo
+    switch (VisibilityMode)
+    {
+    case EMaskVisibilityMode::HideInMasks:
+        // Modo clásico: ocultar si la máscara está en la lista
+        bShouldBeHidden = HiddenInMask.Contains(Mask);
+        break;
+
+    case EMaskVisibilityMode::ShowOnlyInMasks:
+        // Modo inverso: ocultar si la máscara NO está en la lista
+        bShouldBeHidden = !VisibleInMask.Contains(Mask);
+        break;
+    }
+
+    //const bool bShouldBeHidden = HiddenInMask.Contains(Mask);
 
     AActor* Owner = GetOwner();
     if (!Owner) return;
