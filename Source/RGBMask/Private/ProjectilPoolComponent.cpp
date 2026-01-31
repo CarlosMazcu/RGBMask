@@ -1,4 +1,6 @@
 #include "ProjectilPoolComponent.h"
+#include "MaskVisibilitySubsystem.h"
+#include "MaskVisibilityComponent.h"
 
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
@@ -115,7 +117,7 @@ void UProjectilPoolComponent::DeactivateProjectile(AActor* Projectile)
 
 void UProjectilPoolComponent::ActivateProjectile(AActor* Projectile, const FProjectileSpawnParams& Params)
 {
-	// In case it had an old timer still around, clear it
+	// Clear previous lifetime timer (if any)
 	if (UWorld* World = GetWorld())
 	{
 		if (FTimerHandle* Handle = LifeTimers.Find(Projectile))
@@ -125,9 +127,12 @@ void UProjectilPoolComponent::ActivateProjectile(AActor* Projectile, const FProj
 		}
 	}
 
+	// Place projectile
 	Projectile->SetActorTransform(Params.SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
-	Projectile->SetActorHiddenInGame(false);
-	Projectile->SetActorEnableCollision(true);
+
+	// IMPORTANT:
+	// Do NOT force visibility/collision here. Mask system will decide via ApplyMask().
+	// We only ensure the projectile logic/movement can run.
 	Projectile->SetActorTickEnabled(true);
 
 	// Set initial velocity if it has ProjectileMovement
@@ -138,6 +143,25 @@ void UProjectilPoolComponent::ActivateProjectile(AActor* Projectile, const FProj
 		if (!M) continue;
 		M->Velocity = Params.InitialVelocity;
 		M->Activate(true);
+	}
+
+	// ---- APPLY CURRENT MASK RIGHT HERE (this is the fix) ----
+	if (UWorld* World = GetWorld())
+	{
+		if (UMaskVisibilitySubsystem* Sub = World->GetSubsystem<UMaskVisibilitySubsystem>())
+		{
+			if (UMaskVisibilityComponent* MaskComp = Projectile->FindComponentByClass<UMaskVisibilityComponent>())
+			{
+				// Apply current mask immediately (no FX) so projectiles spawned while masked start hidden
+				MaskComp->ApplyMask(Sub->GetCurrentMask(), /*bAllowFX=*/false);
+			}
+			else
+			{
+				// Fallback: if projectile has no mask component, at least make it visible/collidable
+				Projectile->SetActorHiddenInGame(false);
+				Projectile->SetActorEnableCollision(true);
+			}
+		}
 	}
 
 	// Auto-release by lifetime (per projectile)

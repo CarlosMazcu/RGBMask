@@ -15,7 +15,7 @@ void UMaskVisibilitySubsystem::Register(UMaskVisibilityComponent* Comp)
 
     EnsureBoundToPlayer();
 
-   Comp->ApplyMask(CurrentMask);
+   Comp->ApplyMask(CurrentMask, false);
 }
 
 void UMaskVisibilitySubsystem::Unregister(UMaskVisibilityComponent* Comp)
@@ -39,20 +39,20 @@ void UMaskVisibilitySubsystem::EnsureBoundToPlayer()
     if (!Player) { ScheduleBindRetry(); return; }
 
     CachedPlayer = Player;
-    Player->OnMaskChanged.AddUObject(this, &UMaskVisibilitySubsystem::OnPlayerMaskChanged);
+    Player->OnMaskChanged.AddDynamic(this, &UMaskVisibilitySubsystem::OnPlayerMaskChanged);
     bBoundToPlayer = true;
 
     World->GetTimerManager().ClearTimer(RetryBindHandle);
 
     CurrentMask = Player->GetMask();
-    ApplyMaskToAll();
+    ApplyMaskToAll(false);
 }
 
 
 void UMaskVisibilitySubsystem::OnPlayerMaskChanged(EMaskType NewMask)
 {
     CurrentMask = NewMask;
-    ApplyMaskToAll();
+    ApplyMaskToAll(true);
 }
 
 void UMaskVisibilitySubsystem::PruneInvalid()
@@ -66,7 +66,7 @@ void UMaskVisibilitySubsystem::PruneInvalid()
     }
 }
 
-void UMaskVisibilitySubsystem::ApplyMaskToAll()
+void UMaskVisibilitySubsystem::ApplyMaskToAll(bool bAllowFX)
 {
     PruneInvalid();
 
@@ -74,7 +74,7 @@ void UMaskVisibilitySubsystem::ApplyMaskToAll()
     {
         if (UMaskVisibilityComponent* Comp = WeakComp.Get())
         {
-            Comp->ApplyMask(CurrentMask);
+            Comp->ApplyMask(CurrentMask, bAllowFX);
         }
     }
 }

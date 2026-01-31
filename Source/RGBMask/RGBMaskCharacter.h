@@ -11,8 +11,8 @@
 class UCameraComponent;
 class USpringArmComponent;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnMaskChanged, EMaskType);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnMaskChangeStarted, EMaskType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaskChanged, EMaskType, MaskType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaskChangeStarted, EMaskType, MaskType);
 
 /**
  *  A controllable top-down perspective character
@@ -87,8 +87,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
 	TObjectPtr<UMaterialInterface> BlueMaskMaterial;
 
+	UPROPERTY(BlueprintAssignable)
 	FOnMaskChanged OnMaskChanged;
 
+	UPROPERTY(BlueprintAssignable)
 	FOnMaskChangeStarted OnMaskChangeStarted;
 
 	TMap<EMaskType, bool> Masks;
