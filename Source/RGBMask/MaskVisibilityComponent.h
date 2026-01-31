@@ -55,4 +55,19 @@ private:
     TObjectPtr<UNiagaraComponent> ActiveHideFXComponent = nullptr;
 
     bool bWasHidden = false;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Mask|FX")
+    FLinearColor RedFXColor = FLinearColor(1.0f, 0.35f, 0.35f, 1.0f);   // rojo más “vivo”
+
+    UPROPERTY(EditDefaultsOnly, Category = "Mask|FX")
+    FLinearColor GreenFXColor = FLinearColor(0.35f, 1.0f, 0.35f, 1.0f);   // verde más “vivo”
+
+    UPROPERTY(EditDefaultsOnly, Category = "Mask|FX")
+    FLinearColor BlueFXColor = FLinearColor(0.35f, 0.60f, 1.0f, 1.0f);   // azul más visible
+
+    UPROPERTY(EditDefaultsOnly, Category = "Mask|FX")
+    FName MaskColorParamName = TEXT("User.MaskColor");
+
+    FLinearColor GetFXColorForMask(EMaskType Mask) const;
+
 };

@@ -29,8 +29,19 @@ void UMaskVisibilityComponent::BeginPlay()
         }
     }
 
-
 }
+
+FLinearColor UMaskVisibilityComponent:: GetFXColorForMask(EMaskType Mask) const
+{
+    switch (Mask)
+    {
+    case EMaskType::Red:   return RedFXColor;
+    case EMaskType::Green: return GreenFXColor;
+    case EMaskType::Blue:  return BlueFXColor;
+    default:               return FLinearColor::White;
+    }
+}
+
 
 void UMaskVisibilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -93,10 +104,17 @@ void UMaskVisibilityComponent::ApplyMask(EMaskType Mask)
                     SpawnRot,
                     FVector(1.f),
                     false,
-                    true,
+                    false,
                     ENCPoolMethod::None,
                     true
                 );
+                if (ActiveHideFXComponent)
+                {
+                    const FLinearColor FXColor = GetFXColorForMask(Mask);
+
+                    ActiveHideFXComponent->SetVariableLinearColor(MaskColorParamName, FXColor);
+                    ActiveHideFXComponent->Activate(true);
+                }
             }
         }
         else
