@@ -53,6 +53,7 @@ public:
 
 	EMaskType GetMask() const { return CurrentMask; }
 	void SetMask(EMaskType NewMask);
+	
 
 	FOnMaskChanged OnMaskChanged;
 

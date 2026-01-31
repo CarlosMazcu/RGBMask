@@ -6,6 +6,7 @@
 //#include "Templates/SubclassOf.h"
 #include "GameFramework/PlayerController.h"
 #include "RGBMaskPlayerController.generated.h"
+#include "MaskTypes.h"
 
 class UNiagaraSystem;
 class UInputMappingContext;
@@ -52,6 +53,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> DirectionalMovementAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+
+	TObjectPtr<UInputAction> RedMask;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> BlueMask;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> GreenMask;
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
@@ -81,6 +91,11 @@ protected:
 	void OnTouchTriggered();
 	void OnTouchReleased();
 	void OnMove(const struct FInputActionValue& Value);
+	void OnChangeRedMask();
+	void OnChangeBlueMask();
+	void OnChangeGreenMask();
+
+	void ToggleMask(EMaskType DesiredMask);
 
 	/** Helper function to get the move destination */
 	void UpdateCachedDestination();

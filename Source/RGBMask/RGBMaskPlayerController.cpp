@@ -64,6 +64,12 @@ void ARGBMaskPlayerController::SetupInputComponent()
 			EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &ARGBMaskPlayerController::OnTouchReleased);
 
 			EnhancedInputComponent->BindAction(DirectionalMovementAction, ETriggerEvent::Triggered, this, &ARGBMaskPlayerController::OnMove);
+		
+			// masks action
+			EnhancedInputComponent->BindAction(RedMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeRedMask);
+			EnhancedInputComponent->BindAction(BlueMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeBlueMask);
+			EnhancedInputComponent->BindAction(GreenMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeGreenMask);
+
 		}
 		else
 		{
@@ -145,6 +151,38 @@ void ARGBMaskPlayerController::OnMove(const FInputActionValue& Value)
 	}
 	
 
+}
+
+void ARGBMaskPlayerController::OnChangeRedMask()
+{
+	ToggleMask(EMaskType::Red);
+}
+
+void ARGBMaskPlayerController::OnChangeBlueMask()
+{
+	ToggleMask(EMaskType::Blue);
+
+}
+
+void ARGBMaskPlayerController::OnChangeGreenMask()
+{
+	ToggleMask(EMaskType::Green);
+
+}
+
+void ARGBMaskPlayerController::ToggleMask(EMaskType DesiredMask)
+{
+	ARGBMaskCharacter* Character = Cast<ARGBMaskCharacter>(GetPawn());
+	if (!Character)
+	{
+		UE_LOG(LogRGBMask, Warning, TEXT("ToggleMask: Pawn no es ARGBMaskCharacter"));
+		return;
+	}
+
+	const EMaskType Current = Character->GetMask();
+
+	const EMaskType NewMask = (Current == DesiredMask) ? EMaskType::None : DesiredMask;
+	Character->SetMask(NewMask);
 }
 
 void ARGBMaskPlayerController::UpdateCachedDestination()
