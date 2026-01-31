@@ -155,27 +155,22 @@ void ARGBMaskPlayerController::OnMove(const FInputActionValue& Value)
 
 void ARGBMaskPlayerController::OnChangeRedMask()
 {
-	ToggleMask(EMaskType::Red);
+	ARGBMaskCharacter* MaskCharacter = Cast<ARGBMaskCharacter>(GetPawn());
+	if (!MaskCharacter)
+	{
+		UE_LOG(LogRGBMask, Warning, TEXT("ToggleMask: Pawn no es ARGBMaskCharacter"));
+		return;
+	}
+	if (MaskCharacter->Masks[EMaskType::Red])
+	{
+		ToggleMask(EMaskType::Red, MaskCharacter);
+	}
+
 	UE_LOG(LogRGBMask, Error, TEXT("Mask Red"));
 
 }
 
 void ARGBMaskPlayerController::OnChangeBlueMask()
-{
-	ToggleMask(EMaskType::Blue);
-	UE_LOG(LogRGBMask, Error, TEXT("Mask Blue"));
-
-
-}
-
-void ARGBMaskPlayerController::OnChangeGreenMask()
-{
-	ToggleMask(EMaskType::Green);
-	UE_LOG(LogRGBMask, Error, TEXT("Mask Green"));
-
-}
-
-void ARGBMaskPlayerController::ToggleMask(EMaskType DesiredMask)
 {
 	ARGBMaskCharacter* MaskCharacter = Cast<ARGBMaskCharacter>(GetPawn());
 	if (!MaskCharacter)
@@ -183,6 +178,33 @@ void ARGBMaskPlayerController::ToggleMask(EMaskType DesiredMask)
 		UE_LOG(LogRGBMask, Warning, TEXT("ToggleMask: Pawn no es ARGBMaskCharacter"));
 		return;
 	}
+	if (MaskCharacter->Masks[EMaskType::Blue])
+	{
+		ToggleMask(EMaskType::Blue, MaskCharacter);
+	}
+	UE_LOG(LogRGBMask, Error, TEXT("Mask Blue"));
+
+
+}
+
+void ARGBMaskPlayerController::OnChangeGreenMask()
+{
+	ARGBMaskCharacter* MaskCharacter = Cast<ARGBMaskCharacter>(GetPawn());
+	if (!MaskCharacter)
+	{
+		UE_LOG(LogRGBMask, Warning, TEXT("ToggleMask: Pawn no es ARGBMaskCharacter"));
+		return;
+	}
+	if (MaskCharacter->Masks[EMaskType::Green]) 
+	{
+		ToggleMask(EMaskType::Green, MaskCharacter);
+	}
+	UE_LOG(LogRGBMask, Error, TEXT("Mask Green"));
+
+}
+
+void ARGBMaskPlayerController::ToggleMask(EMaskType DesiredMask, ARGBMaskCharacter* MaskCharacter)
+{
 
 	const EMaskType Current = MaskCharacter->GetMask();
 

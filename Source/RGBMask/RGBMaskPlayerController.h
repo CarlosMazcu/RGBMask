@@ -12,6 +12,7 @@ class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
 class UPathFollowingComponent;
+class ARGBMaskCharacter;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -95,7 +96,7 @@ protected:
 	void OnChangeBlueMask();
 	void OnChangeGreenMask();
 
-	void ToggleMask(EMaskType DesiredMask);
+	void ToggleMask(EMaskType DesiredMask, ARGBMaskCharacter* MaskCharacter);
 
 	/** Helper function to get the move destination */
 	void UpdateCachedDestination();

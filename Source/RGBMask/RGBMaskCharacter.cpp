@@ -45,12 +45,25 @@ ARGBMaskCharacter::ARGBMaskCharacter()
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
+	Masks.Reserve(3);
+
+	Masks.Add(EMaskType::Blue, true);
+	Masks.Add(EMaskType::Red, true);
+	Masks.Add(EMaskType::Green, true);
 }
 
 void ARGBMaskCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	OnMaskChanged.Broadcast(CurrentMask);
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		const int32 NumMats = MeshComp->GetNumMaterials();
+		if (NumMats <= 0) return;
+
+		const int32 SafeIndex = FMath::Clamp(MaskMaterialIndex, 0, NumMats - 1);
+		MainMaterial = MeshComp->GetMaterial(SafeIndex);
+	}
 	// stub
 }
 
@@ -65,5 +78,44 @@ void ARGBMaskCharacter::SetMask(EMaskType NewMask)
 {
 	if (CurrentMask == NewMask) return;
 	CurrentMask = NewMask;
+	TObjectPtr<UMaterialInterface> ChosenMat;
+
+	switch (CurrentMask)
+	{
+	case EMaskType::Red:
+		ChosenMat = RedMaskMaterial;
+		break;
+	case EMaskType::Green:
+		ChosenMat = GreenMaskMaterial;
+		break;
+	case EMaskType::Blue:
+		ChosenMat = BlueMaskMaterial;
+		break;
+	case EMaskType::None:
+		ChosenMat = MainMaterial;
+		break;
+	default:
+		break;
+	}
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		const int32 NumMats = MeshComp->GetNumMaterials();
+		if (NumMats <= 0) return;
+
+		const int32 SafeIndex = FMath::Clamp(MaskMaterialIndex, 0, NumMats - 1);
+		MeshComp->SetMaterial(0, ChosenMat);
+	}
 	OnMaskChanged.Broadcast(CurrentMask);
+
+}
+
+void ARGBMaskCharacter::AddMaskToInventory(EMaskType mask)
+{
+	Masks[mask] = true;
+}
+
+void ARGBMaskCharacter::DeleteMask(EMaskType mask)
+{
+	Masks[mask] = false;
+
 }

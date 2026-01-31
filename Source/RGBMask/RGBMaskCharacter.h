@@ -32,17 +32,13 @@ private:
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	UPROPERTY(EditAnywhere, Category = "Mask")
-	EMaskType CurrentMask = EMaskType::Red;
+	EMaskType CurrentMask = EMaskType::None;
 
-	// --- Materiales por máscara (asignas en el editor) ---
-	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
-	TObjectPtr<UMaterialInterface> RedMaskMaterial;
+	TObjectPtr<UMaterialInterface> MainMaterial;
+	int32 MaskMaterialIndex = 0;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
-	TObjectPtr<UMaterialInterface> GreenMaskMaterial;
+	
 
-	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
-	TObjectPtr<UMaterialInterface> BlueMaskMaterial;
 
 public:
 
@@ -64,8 +60,21 @@ public:
 	EMaskType GetMask() const { return CurrentMask; }
 	void SetMask(EMaskType NewMask);
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
+	TObjectPtr<UMaterialInterface> RedMaskMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
+	TObjectPtr<UMaterialInterface> GreenMaskMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
+	TObjectPtr<UMaterialInterface> BlueMaskMaterial;
 
 	FOnMaskChanged OnMaskChanged;
+
+	TMap<EMaskType, bool> Masks;
+
+	void AddMaskToInventory(EMaskType mask);
+	void DeleteMask(EMaskType mask);
 
 };
 
