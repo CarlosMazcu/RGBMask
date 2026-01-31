@@ -172,17 +172,17 @@ void ARGBMaskPlayerController::OnChangeGreenMask()
 
 void ARGBMaskPlayerController::ToggleMask(EMaskType DesiredMask)
 {
-	ARGBMaskCharacter* Character = Cast<ARGBMaskCharacter>(GetPawn());
-	if (!Character)
+	ARGBMaskCharacter* MaskCharacter = Cast<ARGBMaskCharacter>(GetPawn());
+	if (!MaskCharacter)
 	{
 		UE_LOG(LogRGBMask, Warning, TEXT("ToggleMask: Pawn no es ARGBMaskCharacter"));
 		return;
 	}
 
-	const EMaskType Current = Character->GetMask();
+	const EMaskType Current = MaskCharacter->GetMask();
 
 	const EMaskType NewMask = (Current == DesiredMask) ? EMaskType::None : DesiredMask;
-	Character->SetMask(NewMask);
+	MaskCharacter->SetMask(NewMask);
 }
 
 void ARGBMaskPlayerController::UpdateCachedDestination()

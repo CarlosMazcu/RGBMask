@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MaskTypes.h"
 //#include "Templates/SubclassOf.h"
 #include "GameFramework/PlayerController.h"
 #include "RGBMaskPlayerController.generated.h"
-#include "MaskTypes.h"
 
 class UNiagaraSystem;
 class UInputMappingContext;
