@@ -74,10 +74,95 @@ void ARGBMaskCharacter::Tick(float DeltaSeconds)
 	// stub
 }
 
+//void ARGBMaskCharacter::SetMask(EMaskType NewMask)
+//{
+//
+//	if (CurrentMask == NewMask) return;
+//	CurrentMask = NewMask;
+//	TObjectPtr<UMaterialInterface> ChosenMat;
+//
+//	switch (CurrentMask)
+//	{
+//	case EMaskType::Red:
+//		ChosenMat = RedMaskMaterial;
+//		break;
+//	case EMaskType::Green:
+//		ChosenMat = GreenMaskMaterial;
+//		break;
+//	case EMaskType::Blue:
+//		ChosenMat = BlueMaskMaterial;
+//		break;
+//	case EMaskType::None:
+//		ChosenMat = MainMaterial;
+//		break;
+//	default:
+//		break;
+//	}
+//	if (USkeletalMeshComponent* MeshComp = GetMesh())
+//	{
+//		const int32 NumMats = MeshComp->GetNumMaterials();
+//		if (NumMats <= 0) return;
+//
+//		const int32 SafeIndex = FMath::Clamp(MaskMaterialIndex, 0, NumMats - 1);
+//		MeshComp->SetMaterial(0, ChosenMat);
+//	}
+//	OnMaskChanged.Broadcast(CurrentMask);
+//
+//}
+
 void ARGBMaskCharacter::SetMask(EMaskType NewMask)
 {
-	if (CurrentMask == NewMask) return;
-	CurrentMask = NewMask;
+	// Si ya estamos en el proceso de cambiar a esta máscara, no hacemos nada
+	if (bIsMaskChangeInProgress && PendingMask == NewMask) return;
+
+	// Si ya tenemos esta máscara puesta y no hay cambio pendiente, no hacemos nada
+	if (!bIsMaskChangeInProgress && CurrentMask == NewMask) return;
+
+	// Cancelar cualquier cambio de máscara pendiente
+	if (bIsMaskChangeInProgress)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(MaskChangeTimerHandle);
+		}
+		bIsMaskChangeInProgress = false;
+	}
+
+	// Guardar la máscara pendiente
+	PendingMask = NewMask;
+	bIsMaskChangeInProgress = true;
+
+	// Disparar el evento de inicio del cambio (aquí se puede poner la animación en el futuro)
+	OnMaskChangeStarted.Broadcast(NewMask);
+
+	// Si el delay es 0 o menor, aplicar el cambio inmediatamente
+	if (MaskChangeDelay <= 0.0f)
+	{
+		ApplyMaskChange();
+		return;
+	}
+
+	// Programar el cambio de máscara después del delay
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			MaskChangeTimerHandle,
+			this,
+			&ARGBMaskCharacter::ApplyMaskChange,
+			MaskChangeDelay,
+			false
+		);
+	}
+}
+
+void ARGBMaskCharacter::ApplyMaskChange()
+{
+	bIsMaskChangeInProgress = false;
+
+	// Si la máscara pendiente es la misma que la actual, solo limpiamos el flag
+	if (CurrentMask == PendingMask) return;
+
+	CurrentMask = PendingMask;
 	TObjectPtr<UMaterialInterface> ChosenMat;
 
 	switch (CurrentMask)
@@ -106,7 +191,6 @@ void ARGBMaskCharacter::SetMask(EMaskType NewMask)
 		MeshComp->SetMaterial(0, ChosenMat);
 	}
 	OnMaskChanged.Broadcast(CurrentMask);
-
 }
 
 void ARGBMaskCharacter::AddMaskToInventory(EMaskType mask)

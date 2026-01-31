@@ -39,11 +39,11 @@ void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTim
 		ClampCameraToVolume(OutVT.POV.Location);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Camera Pos: %s"), *OutVT.POV.Location.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Camera Pos: %s"), *OutVT.POV.Location.ToString());
 
 	if (PlayerPawn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Player Pos: %s"), *PlayerPawn->GetActorLocation().ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("Player Pos: %s"), *PlayerPawn->GetActorLocation().ToString());
 	}
 }
 
