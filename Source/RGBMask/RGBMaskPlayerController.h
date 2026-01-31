@@ -63,6 +63,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> GreenMask;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> CameraShake;
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
@@ -95,6 +97,7 @@ protected:
 	void OnChangeRedMask();
 	void OnChangeBlueMask();
 	void OnChangeGreenMask();
+	void OnCameraShake();
 
 	void ToggleMask(EMaskType DesiredMask, class ARGBMaskCharacter* MaskCharacter);
 

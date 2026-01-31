@@ -2,12 +2,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
+#include "RGBMaskPlayerController.h"
 #include "Camera/CameraShakeBase.h"
 
 UCameraShakeSubsystem::UCameraShakeSubsystem()
 {
     static ConstructorHelpers::FClassFinder<UCameraShakeBase> ShakeBP(
-        TEXT("/Game/Actors/Traps/BP_ShakeBase.BP_ShakeBase")
+        TEXT("/Game/Actors/Traps/BP_ShakeBase.BP_ShakeBase_C")
     );
 
     if (ShakeBP.Succeeded())
@@ -31,9 +32,12 @@ void UCameraShakeSubsystem::PlayShake(TSubclassOf<UCameraShakeBase> ShakeClass, 
         }
         return;
     }
-
+    APlayerController* PC0 = UGameplayStatics::GetPlayerController(World, 0);
     // 2) Si no, en singleplayer: PlayerController 0
-    if (APlayerController* PC0 = UGameplayStatics::GetPlayerController(World, 0))
+    UCameraShakeBase* Started = PC0->PlayerCameraManager->StartCameraShake(ShakeClass, Scale);
+    UE_LOG(LogTemp, Warning, TEXT("Shake started? %s"), Started ? TEXT("YES") : TEXT("NO"));
+
+    if (Started)
     {
         if (PC0->IsLocalController() && PC0->PlayerCameraManager)
         {

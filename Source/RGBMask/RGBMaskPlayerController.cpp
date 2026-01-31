@@ -7,6 +7,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "RGBMaskCharacter.h"
 #include "Engine/World.h"
+#include "CameraShakeSubsystem.h"
 #include "EnhancedInputComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "InputActionValue.h"
@@ -69,6 +70,7 @@ void ARGBMaskPlayerController::SetupInputComponent()
 			EnhancedInputComponent->BindAction(RedMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeRedMask);
 			EnhancedInputComponent->BindAction(BlueMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeBlueMask);
 			EnhancedInputComponent->BindAction(GreenMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeGreenMask);
+
 
 		}
 		else
@@ -201,6 +203,17 @@ void ARGBMaskPlayerController::OnChangeGreenMask()
 	}
 	UE_LOG(LogRGBMask, Error, TEXT("Mask Green"));
 
+}
+
+void ARGBMaskPlayerController::OnCameraShake()
+{
+	if (UWorld* w = GetWorld()) 
+	{
+		if (UCameraShakeSubsystem* ShakeSub = w->GetSubsystem<UCameraShakeSubsystem>()) 
+		{
+			ShakeSub->PlayImpactShake(10.0f);
+		}
+	}
 }
 
 void ARGBMaskPlayerController::ToggleMask(EMaskType DesiredMask, ARGBMaskCharacter* MaskCharacter)

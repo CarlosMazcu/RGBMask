@@ -11,9 +11,6 @@ ARGBMaskCameraManager::ARGBMaskCameraManager()
 
 void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTime)
 {
-	// Llamar a la implementación base primero
-	Super::UpdateViewTarget(OutVT, DeltaTime);
-
 	// Inicializar volúmenes si es necesario
 	if (!bVolumesInitialized)
 	{
@@ -21,31 +18,42 @@ void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTim
 		bVolumesInitialized = true;
 	}
 
-	// Obtener la ubicación del jugador
-	APawn* PlayerPawn = GetOwningPlayerController()->GetPawn();
+	// Obtener pawn
+	APlayerController* PC = GetOwningPlayerController();
+	APawn* PlayerPawn = PC ? PC->GetPawn() : nullptr;
 	if (!PlayerPawn)
+	{
+		// fallback: comportamiento base
+		Super::UpdateViewTarget(OutVT, DeltaTime);
 		return;
+	}
 
-	FVector PlayerLocation = PlayerPawn->GetActorLocation();
+	const FVector PlayerLocation = PlayerPawn->GetActorLocation();
 
 	// Determinar volumen activo
 	ActiveCameraVolume = GetActiveVolume(PlayerLocation);
 
+	// 1) Base SIN modifiers (muy importante)
+	Super::UpdateViewTargetInternal(OutVT, DeltaTime);
+
+	// 2) Tu cámara (esto crea la POV “base”)
 	ApplyCameraOffset(OutVT, PlayerLocation);
 
-	// Aplicar clamp si hay un volumen activo
+	// 3) Clamp (recomendado con margen para que el shake no se lo coma)
 	if (ActiveCameraVolume)
 	{
-		ClampCameraToVolume(OutVT.POV.Location);
+		constexpr float Slack = 25.f; // ajusta 10–50 según lo que quieras permitir
+		FVector MinBounds, MaxBounds;
+		ActiveCameraVolume->GetCameraBounds(MinBounds, MaxBounds);
+
+		OutVT.POV.Location.X = FMath::Clamp(OutVT.POV.Location.X, MinBounds.X + Slack, MaxBounds.X - Slack);
+		OutVT.POV.Location.Y = FMath::Clamp(OutVT.POV.Location.Y, MinBounds.Y + Slack, MaxBounds.Y - Slack);
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("Camera Pos: %s"), *OutVT.POV.Location.ToString());
-
-	if (PlayerPawn)
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("Player Pos: %s"), *PlayerPawn->GetActorLocation().ToString());
-	}
+	// 4) Ahora sí: aplica modifiers (shakes, etc.)
+	ApplyCameraModifiers(DeltaTime, OutVT.POV);
 }
+
 
 void ARGBMaskCameraManager::FindCameraVolumes()
 {
