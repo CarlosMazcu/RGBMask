@@ -1,5 +1,5 @@
 #include "TrapSplineMover.h"
-
+#include "TimerManager.h"
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
@@ -32,6 +32,49 @@ ATrapSplineMover::ATrapSplineMover()
     StartTrigger->SetGenerateOverlapEvents(true);
 }
 
+void ATrapSplineMover::ResetWallTrap()
+{
+    bActive = !bStartOnTrigger; 
+    Distance = InitialDistance;
+    DirectionSign = InitialDirectionSign;
+
+    RestorePawnOnlyCollision();
+
+    MeshShakeTimeLeft = 0.f;
+    SmoothedWorldOffset = FVector::ZeroVector;
+    SmoothedRotOffset = FRotator::ZeroRotator;
+
+    if (bStartOnTrigger && StartTrigger)
+    {
+        StartTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        StartTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
+        StartTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+        StartTrigger->SetGenerateOverlapEvents(true);
+    }
+
+    if (Spline && TrapMesh)
+    {
+        const FVector Loc = Spline->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
+        const FRotator Rot = Spline->GetRotationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
+
+        TrapMesh->SetWorldLocationAndRotation(Loc, Rot, false);
+    }
+}
+
+void ATrapSplineMover::ScheduleResetWallTrap(float DelaySeconds)
+{
+    if (!GetWorld()) return;
+
+    GetWorld()->GetTimerManager().ClearTimer(ResetTimerHandle);
+    GetWorld()->GetTimerManager().SetTimer(
+        ResetTimerHandle,
+        this,
+        &ATrapSplineMover::ResetWallTrap,
+        DelaySeconds,
+        false
+    );
+}
+
 void ATrapSplineMover::BeginPlay()
 {
     Super::BeginPlay();
@@ -39,8 +82,12 @@ void ATrapSplineMover::BeginPlay()
     // Seed distinta por instancia (para que no vibren todos igual)
     MeshShakeSeed = FMath::FRandRange(0.f, 1000.f);
 
+    InitialDistance = StartDistance;
+    InitialDirectionSign = +1; 
+
     Distance = StartDistance;
-    SetTrapTransformAtDistance(Distance, 0.f);
+    DirectionSign = InitialDirectionSign;
+    ResetWallTrap();
 
     if (bStartOnTrigger)
     {
@@ -50,6 +97,20 @@ void ATrapSplineMover::BeginPlay()
     {
         bActive = true;
     }
+}
+
+void ATrapSplineMover::RestorePawnOnlyCollision()
+{
+    if (!TrapMesh) return;
+
+    TrapMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    TrapMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+    TrapMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+    TrapMesh->SetGenerateOverlapEvents(false);
+    TrapMesh->SetSimulatePhysics(false);
+    TrapMesh->SetCanEverAffectNavigation(false);
+
+    bHasDisabledMeshCollision = false;
 }
 
 void ATrapSplineMover::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -121,48 +182,41 @@ void ATrapSplineMover::SetTrapTransformAtDistance(float InDistance, float DeltaS
     const FVector NewLoc = Spline->GetLocationAtDistanceAlongSpline(InDistance, ESplineCoordinateSpace::World);
     const FRotator NewRot = Spline->GetRotationAtDistanceAlongSpline(InDistance, ESplineCoordinateSpace::World);
 
-    // 1) Movimiento base con sweep (solo detecta Pawn gracias a la configuración de colisión)
     FHitResult Hit;
     TrapMesh->SetWorldLocationAndRotation(NewLoc, NewRot, bSweepCollision, &Hit);
 
-    // 2) Impacto con Pawn: arrancar vibración y (opcional) desactivar colisión para no hacer hit cada frame
     if (bSweepCollision && Hit.bBlockingHit)
     {
         if (ACharacter* Char = Cast<ACharacter>(Hit.GetActor()))
         {
-            // Arranca/refresh de vibración
             MeshShakeTimeLeft = MeshShakeDuration;
 
-            // Quitar colisión tras el primer hit (para que no haga hits infinitos)
             if (bDisableMeshCollisionOnPawnHit && !bHasDisabledMeshCollision)
             {
                 TrapMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
                 bHasDisabledMeshCollision = true;
             }
 
-            // (Opcional) parar la trampa al impactar
             if (bStopOnHit)
             {
                 bActive = false;
             }
-
+            ScheduleResetWallTrap(DefaultResetDelay);
             UE_LOG(LogTemp, Warning, TEXT("Trampa golpeó a %s"), *Char->GetName());
         }
     }
 
-  // 3) Vibración visual SUAVE (NO sweep)
     if (MeshShakeTimeLeft > 0.f && MeshShakeDuration > 0.f)
     {
         MeshShakeTimeLeft = FMath::Max(0.f, MeshShakeTimeLeft - DeltaSeconds);
 
         const float Elapsed = MeshShakeDuration - MeshShakeTimeLeft;
-        const float Envelope = FMath::Exp(-MeshShakeDecay * Elapsed); // amortiguación
+        const float Envelope = FMath::Exp(-MeshShakeDecay * Elapsed); 
 
         const float W = 2.f * PI * MeshShakeFrequency;
         const float S1 = FMath::Sin((Elapsed + MeshShakeSeed) * W);
         const float S2 = FMath::Sin((Elapsed + MeshShakeSeed) * W * 1.37f);
 
-        // Base (justo después del movimiento por spline)
         const FVector BaseLoc = TrapMesh->GetComponentLocation();
         const FRotator BaseRot = TrapMesh->GetComponentRotation();
 

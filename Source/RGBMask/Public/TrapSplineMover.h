@@ -17,6 +17,12 @@ class ATrapSplineMover : public AActor
 public:
     ATrapSplineMover();
 
+    UFUNCTION(BlueprintCallable, Category = "Reset")
+    void ResetWallTrap();
+
+    UFUNCTION(BlueprintCallable, Category = "Reset")
+    void ScheduleResetWallTrap(float DelaySeconds);
+
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
@@ -45,7 +51,6 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Stats", meta = (ClampMin = "0.0"))
     float StartDistance = 0.f;
 
-    // Opción B: Sweep SOLO contra Pawn (el mesh ignora el mundo por colisión)
     UPROPERTY(EditAnywhere, Category = "Stats|Collision", DisplayName = "Sweep (solo Pawn)")
     bool bSweepCollision = true;
 
@@ -55,7 +60,17 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Stats|Collision", meta = (EditCondition = "bSweepCollision"), DisplayName = "Disable Mesh Collision On Pawn Hit")
     bool bDisableMeshCollisionOnPawnHit = true;
 
+    UPROPERTY(EditAnywhere, Category = "Reset", meta = (ClampMin = "0.0"))
+    float DefaultResetDelay = 1.5f;
+
 private:
+
+    float InitialDistance = 0.f;
+    int32 InitialDirectionSign = +1;
+
+    FTimerHandle ResetTimerHandle;
+
+    void RestorePawnOnlyCollision();
     bool bActive = false;
     float Distance = 0.f;
     int32 DirectionSign = +1;
