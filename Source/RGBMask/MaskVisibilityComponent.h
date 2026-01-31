@@ -104,7 +104,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "Mask")
     bool bDisableTickWhenHidden = false;
 
-    void ApplyMask(EMaskType Mask);
+    void ApplyMask(EMaskType Mask, bool bAllowFX = true);
 
 
 protected:

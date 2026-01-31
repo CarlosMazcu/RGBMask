@@ -64,7 +64,7 @@ void UMaskVisibilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 
 
-void UMaskVisibilityComponent::ApplyMask(EMaskType Mask)
+void UMaskVisibilityComponent::ApplyMask(EMaskType Mask, bool bAllowFX)
 {
     bool bShouldBeHidden = false;
 
@@ -87,8 +87,16 @@ void UMaskVisibilityComponent::ApplyMask(EMaskType Mask)
 
     // --- FX solo si hay transición ---
     const bool bChangingState = (bShouldBeHidden != bWasHidden);
-
-    if (bChangingState)
+    if (!bAllowFX)
+    {
+        if (ActiveHideFXComponent)
+        {
+            ActiveHideFXComponent->DeactivateImmediate();
+            ActiveHideFXComponent->DestroyComponent();
+            ActiveHideFXComponent = nullptr;
+        }
+    }
+    else if (bChangingState)
     {
         if (bShouldBeHidden)
         {

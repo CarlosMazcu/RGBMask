@@ -17,22 +17,24 @@ public:
     void Register(UMaskVisibilityComponent* Comp);
     void Unregister(UMaskVisibilityComponent* Comp);
 
+    EMaskType GetCurrentMask() const { return CurrentMask; }   // <-- NUEVO
+
 private:
     void EnsureBoundToPlayer();
     void OnPlayerMaskChanged(EMaskType NewMask);
 
-    void ApplyMaskToAll();
+    void ApplyMaskToAll(bool bAllowFX);
     void PruneInvalid();
 
+    void ScheduleBindRetry();
 private:
-    EMaskType CurrentMask = EMaskType::Red;
+    EMaskType CurrentMask = EMaskType::None;
 
     TSet<TWeakObjectPtr<UMaskVisibilityComponent>> Registered;
 
     TWeakObjectPtr<ARGBMaskCharacter> CachedPlayer;
     bool bBoundToPlayer = false;
     FTimerHandle RetryBindHandle;
-    void ScheduleBindRetry();
 
 };
 
