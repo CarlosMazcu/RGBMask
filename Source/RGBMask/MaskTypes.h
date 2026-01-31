@@ -7,7 +7,8 @@
 UENUM(BlueprintType)
 enum class EMaskType : uint8
 {
-    Red   UMETA(DisplayName = "Roja"),
-    Green UMETA(DisplayName = "Verde"),
-    Blue  UMETA(DisplayName = "Azul"),
+    Red   UMETA(DisplayName = "Red"),
+    Green UMETA(DisplayName = "Green"),
+    Blue  UMETA(DisplayName = "Blue"),
+    None  UMETA(DisplayName = "None")
 };
