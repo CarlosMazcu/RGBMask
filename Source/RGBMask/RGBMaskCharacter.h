@@ -74,6 +74,7 @@ public:
 	/** Returns the Camera Boom component **/
 	USpringArmComponent* GetCameraBoom() const { return CameraBoom.Get(); }
 
+	UFUNCTION(BlueprintCallable)
 	EMaskType GetMask() const { return CurrentMask; }
 	void SetMask(EMaskType NewMask);
 	
