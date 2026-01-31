@@ -12,10 +12,14 @@
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "RGBMask/Public/Camera/RGBMaskCameraManager.h"
 #include "RGBMask.h"
 
 ARGBMaskPlayerController::ARGBMaskPlayerController()
 {
+
+	PlayerCameraManagerClass = ARGBMaskCameraManager::StaticClass();
+
 	bIsTouch = false;
 	bMoveToMouseCursor = false;
 
@@ -27,6 +31,7 @@ ARGBMaskPlayerController::ARGBMaskPlayerController()
 	DefaultMouseCursor = EMouseCursor::Default;
 	CachedDestination = FVector::ZeroVector;
 	FollowTime = 0.f;
+
 }
 
 void ARGBMaskPlayerController::SetupInputComponent()
