@@ -27,6 +27,20 @@ protected:
     UPROPERTY()
     TArray<ACameraVolume*> CameraVolumes;
 
+    // Camera offset settings
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Offset", meta = (ToolTip = "Distancia hacia atrás desde el jugador"))
+    float CameraBackwardOffset = 300.0f; 
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Offset", meta = (ToolTip = "Altura sobre el jugador"))
+    float CameraHeightOffset = 400.0f;  
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Offset", meta = (ToolTip = "Ángulo de inclinación de la camara"))
+    float CameraPitchAngle = -45.0f; 
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Offset", meta = (ToolTip = "Si true, usa el forward del jugador; si false, usa dirección fija"))
+    bool bUsePlayerForwardForOffset = true;  
+
+
     // Buscar volúmenes en el nivel
     void FindCameraVolumes();
 
@@ -35,6 +49,8 @@ protected:
 
     // Aplicar el clamp a la cámara
     void ClampCameraToVolume(FVector& CameraLocation);
+
+    void ApplyCameraOffset(FTViewTarget& OutVT, const FVector& PlayerLocation);
 
 private:
     bool bVolumesInitialized = false;

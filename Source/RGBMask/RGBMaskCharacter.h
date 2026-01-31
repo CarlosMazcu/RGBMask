@@ -12,6 +12,7 @@ class UCameraComponent;
 class USpringArmComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMaskChanged, EMaskType);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMaskChangeStarted, EMaskType);
 
 /**
  *  A controllable top-down perspective character
@@ -34,10 +35,26 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Mask")
 	EMaskType CurrentMask = EMaskType::None;
 
+	UPROPERTY(EditAnywhere, Category = "Mask")
+	EMaskType PendingMask = EMaskType::None;
+
+	UPROPERTY(EditAnywhere, Category = "Mask", meta = (ClampMin = "0.0"))
+	float MaskChangeDelay = 0.5f;
+
+	FTimerHandle MaskChangeTimerHandle;
+	bool bIsMaskChangeInProgress = false;
+
 	TObjectPtr<UMaterialInterface> MainMaterial;
 	int32 MaskMaterialIndex = 0;
 
-	
+	/** Internal function that applies the mask change after delay */
+	void ApplyMaskChange();
+
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float CameraDistance = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float CameraPitch = -60.f;
 
 
 public:
@@ -70,6 +87,8 @@ public:
 	TObjectPtr<UMaterialInterface> BlueMaskMaterial;
 
 	FOnMaskChanged OnMaskChanged;
+
+	FOnMaskChangeStarted OnMaskChangeStarted;
 
 	TMap<EMaskType, bool> Masks;
 
