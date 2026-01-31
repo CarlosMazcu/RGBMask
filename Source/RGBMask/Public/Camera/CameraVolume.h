@@ -8,16 +8,13 @@
 #include "CameraVolume.generated.h"
 
 UCLASS()
-class RGBMASK_API ACameraVolume : public AActor
+class RGBMASK_API ACameraVolume : public AVolume
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
 	ACameraVolume();
-
-	UPROPERTY(EditAnywhere, Category = "Camera")
-	UBoxComponent* CameraVolumeBox;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	int32 Priority = 0; // posible mejora volumenes superpuestos
