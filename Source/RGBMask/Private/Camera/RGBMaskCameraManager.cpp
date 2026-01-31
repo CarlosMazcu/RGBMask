@@ -7,15 +7,18 @@
 
 ARGBMaskCameraManager::ARGBMaskCameraManager()
 {
+	PreviousCameraVolume = nullptr;
+	ActiveCameraVolume = nullptr;
 }
 
 void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTime)
 {
-	// Inicializar volúmenes si es necesario
+	// Inicializar volumenes si es necesario
 	if (!bVolumesInitialized)
 	{
 		FindCameraVolumes();
 		bVolumesInitialized = true;
+		UE_LOG(LogTemp, Warning, TEXT("[CameraManager] Camera volumes initialized, found %d volumes"), CameraVolumes.Num());
 	}
 
 	// Obtener pawn
@@ -31,18 +34,26 @@ void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTim
 	const FVector PlayerLocation = PlayerPawn->GetActorLocation();
 
 	// Determinar volumen activo
-	ActiveCameraVolume = GetActiveVolume(PlayerLocation);
+	ACameraVolume* NewActiveVolume = GetActiveVolume(PlayerLocation);
+
+	// Manejar cambio de volumen (ocultar/mostrar actores)
+	if (NewActiveVolume != ActiveCameraVolume)
+	{
+
+		HandleVolumeChange(NewActiveVolume);
+		ActiveCameraVolume = NewActiveVolume;
+	}
 
 	// 1) Base SIN modifiers (muy importante)
 	Super::UpdateViewTargetInternal(OutVT, DeltaTime);
 
-	// 2) Tu cámara (esto crea la POV “base”)
+	// 2) Tu camara (esto crea la POV "base")
 	ApplyCameraOffset(OutVT, PlayerLocation);
 
 	// 3) Clamp (recomendado con margen para que el shake no se lo coma)
 	if (ActiveCameraVolume)
 	{
-		constexpr float Slack = 25.f; // ajusta 10–50 según lo que quieras permitir
+		constexpr float Slack = 25.f; // ajusta 10-50 segun lo que quieras permitir
 		FVector MinBounds, MaxBounds;
 		ActiveCameraVolume->GetCameraBounds(MinBounds, MaxBounds);
 
@@ -50,7 +61,7 @@ void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTim
 		OutVT.POV.Location.Y = FMath::Clamp(OutVT.POV.Location.Y, MinBounds.Y + Slack, MaxBounds.Y - Slack);
 	}
 
-	// 4) Ahora sí: aplica modifiers (shakes, etc.)
+	// 4) Ahora si: aplica modifiers (shakes, etc.)
 	ApplyCameraModifiers(DeltaTime, OutVT.POV);
 }
 
@@ -88,7 +99,7 @@ ACameraVolume* ARGBMaskCameraManager::GetActiveVolume(const FVector& PlayerLocat
 		}
 	}
 
-	// Si el jugador no está en ningún volumen, usar el primero disponible
+	// Si el jugador no esta en ningun volumen, usar el primero disponible
 	if (CameraVolumes.Num() > 0)
 	{
 		return CameraVolumes[0];
@@ -105,7 +116,7 @@ void ARGBMaskCameraManager::ClampCameraToVolume(FVector& CameraLocation)
 	FVector MinBounds, MaxBounds;
 	ActiveCameraVolume->GetCameraBounds(MinBounds, MaxBounds);
 
-	// Clampear X e Y, mantener Z para altura de cámara
+	// Clampear X e Y, mantener Z para altura de camara
 	CameraLocation.X = FMath::Clamp(CameraLocation.X, MinBounds.X, MaxBounds.X);
 	CameraLocation.Y = FMath::Clamp(CameraLocation.Y, MinBounds.Y, MaxBounds.Y);
 	// Z no se clampea para mantener la altura original
@@ -117,38 +128,38 @@ void ARGBMaskCameraManager::ApplyCameraOffset(FTViewTarget& OutVT, const FVector
 	if (!PlayerPawn)
 		return;
 
-	// Determinar la dirección hacia atrás
+	// Determinar la direccion hacia atras
 	FVector BackwardDirection;
 
 	if (bUsePlayerForwardForOffset)
 	{
-		// Usar el forward del jugador (la cámara seguirá la orientación del personaje)
+		// Usar el forward del jugador (la camara seguira la orientacion del personaje)
 		FRotator PlayerRotation = PlayerPawn->GetActorRotation();
-		BackwardDirection = -PlayerRotation.Vector(); // Negativo porque queremos ir hacia atrás
+		BackwardDirection = -PlayerRotation.Vector(); // Negativo porque queremos ir hacia atras
 	}
 	else
 	{
-		// Usar una dirección fija (por ejemplo, siempre hacia el sur)
-		BackwardDirection = FVector(-1.0f, 0.0f, 0.0f); // Ajusta según tu nivel
+		// Usar una direccion fija (por ejemplo, siempre hacia el sur)
+		BackwardDirection = FVector(-1.0f, 0.0f, 0.0f); // Ajusta segun tu nivel
 	}
 
 	// Proyectar en el plano horizontal (ignorar Z)
 	BackwardDirection.Z = 0.0f;
 	BackwardDirection.Normalize();
 
-	// Calcular la posición objetivo de la cámara
+	// Calcular la posicion objetivo de la camara
 	FVector TargetCameraLocation = PlayerLocation;
 
-	// Aplicar offset horizontal (hacia atrás)
+	// Aplicar offset horizontal (hacia atras)
 	TargetCameraLocation += BackwardDirection * CameraBackwardOffset;
 
 	// Aplicar offset vertical (altura)
 	TargetCameraLocation.Z += CameraHeightOffset;
 
-	// Actualizar la posición de la cámara
+	// Actualizar la posicion de la camara
 	OutVT.POV.Location = TargetCameraLocation;
 
-	// Calcular la rotación de la cámara para que mire al jugador
+	// Calcular la rotacion de la camara para que mire al jugador
 	FVector DirectionToPlayer = PlayerLocation - TargetCameraLocation;
 	FRotator CameraRotation = DirectionToPlayer.Rotation();
 
@@ -161,3 +172,21 @@ void ARGBMaskCameraManager::ApplyCameraOffset(FTViewTarget& OutVT, const FVector
 	OutVT.POV.Rotation = CameraRotation;
 }
 
+void ARGBMaskCameraManager::HandleVolumeChange(ACameraVolume* NewVolume)
+{
+
+	// Restaurar visibilidad del volumen anterior
+	if (PreviousCameraVolume && PreviousCameraVolume != NewVolume)
+	{
+		PreviousCameraVolume->ShowActors();
+	}
+
+	// Ocultar actores del nuevo volumen
+	if (NewVolume)
+	{
+		NewVolume->HideActors();
+	}
+
+	// Actualizar el volumen anterior
+	PreviousCameraVolume = NewVolume;
+}
