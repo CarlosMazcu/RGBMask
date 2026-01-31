@@ -73,7 +73,11 @@ public:
 
 	TMap<EMaskType, bool> Masks;
 
+	UFUNCTION(BlueprintCallable, Category = "Mask")
+
 	void AddMaskToInventory(EMaskType mask);
+
+	UFUNCTION(BlueprintCallable, Category = "Mask")
 	void DeleteMask(EMaskType mask);
 
 };

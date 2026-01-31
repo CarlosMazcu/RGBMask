@@ -47,9 +47,9 @@ ARGBMaskCharacter::ARGBMaskCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	Masks.Reserve(3);
 
-	Masks.Add(EMaskType::Blue, true);
-	Masks.Add(EMaskType::Red, true);
-	Masks.Add(EMaskType::Green, true);
+	Masks.Add(EMaskType::Blue, false);
+	Masks.Add(EMaskType::Red, false);
+	Masks.Add(EMaskType::Green, false);
 }
 
 void ARGBMaskCharacter::BeginPlay()
