@@ -23,13 +23,21 @@ void ARGBMaskCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaTim
         UE_LOG(LogTemp, Warning, TEXT("[CameraManager] Camera volumes initialized, found %d volumes"), CameraVolumes.Num());
     }
 
+
     // Obtener pawn
     APlayerController* PC = GetOwningPlayerController();
     APawn* PlayerPawn = PC ? PC->GetPawn() : nullptr;
-    if (!PlayerPawn)
+    // Si el view target no es el pawn del jugador, dejar que Unreal maneje
+    if (ViewTarget.Target != PlayerPawn || PendingViewTarget.Target != nullptr)
     {
-        Super::UpdateViewTarget(OutVT, DeltaTime);
-        return;
+      Super::UpdateViewTarget(OutVT, DeltaTime);
+
+      // Sincronizar posición
+      CurrentCameraLocation = OutVT.POV.Location;
+      CurrentCameraRotation = OutVT.POV.Rotation;
+      bIsTransitioning = false;
+
+      return;
     }
 
     const FVector PlayerLocation = PlayerPawn->GetActorLocation();
