@@ -55,6 +55,24 @@ void ACameraVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	
+    UE_LOG(LogTemp, Warning, TEXT("[CameraVolume] BeginPlay - Volume: %s, HiddenActors count: %d"), *GetName(), HiddenActors.Num());
+
+    for (AActor* Actor : HiddenActors)
+    {
+        if (IsValid(Actor))
+        {
+            OriginalVisibilityState.Add(Actor, Actor->IsHidden());
+            UE_LOG(LogTemp, Log, TEXT("[CameraVolume] Registered actor: %s (originally hidden: %s)"),
+                *Actor->GetName(),
+                Actor->IsHidden() ? TEXT("YES") : TEXT("NO"));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[CameraVolume] Invalid actor in HiddenActors list at BeginPlay!"));
+        }
+    }
+
+    
 }
 
 // Called every frame
@@ -64,3 +82,59 @@ void ACameraVolume::Tick(float DeltaTime)
 
 }
 
+void ACameraVolume::HideActors()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[CameraVolume] HideActors called on %s, HiddenActors count: %d"), *GetName(), HiddenActors.Num());
+
+    for (AActor* Actor : HiddenActors)
+    {
+        if (IsValid(Actor))
+        {
+            // Guardar el estado original de visibilidad si no lo hemos guardado antes
+            if (!OriginalVisibilityState.Contains(Actor))
+            {
+                OriginalVisibilityState.Add(Actor, Actor->IsHidden());
+            }
+
+            UE_LOG(LogTemp, Warning, TEXT("[CameraVolume] Hiding actor: %s (was hidden: %s)"),
+                *Actor->GetName(),
+                Actor->IsHidden() ? TEXT("YES") : TEXT("NO"));
+
+            // Ocultar el actor
+            Actor->SetActorHiddenInGame(true);
+
+            UE_LOG(LogTemp, Warning, TEXT("[CameraVolume] After hiding, actor %s is hidden: %s"),
+                *Actor->GetName(),
+                Actor->IsHidden() ? TEXT("YES") : TEXT("NO"));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[CameraVolume] Invalid actor in HiddenActors list!"));
+        }
+    }
+}
+
+void ACameraVolume::ShowActors()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[CameraVolume] ShowActors called on %s"), *GetName());
+
+    for (AActor* Actor : HiddenActors)
+    {
+        if (IsValid(Actor))
+        {
+            // Restaurar el estado original de visibilidad
+            bool bWasOriginallyHidden = false;
+            if (OriginalVisibilityState.Contains(Actor))
+            {
+                bWasOriginallyHidden = OriginalVisibilityState[Actor];
+            }
+
+            UE_LOG(LogTemp, Warning, TEXT("[CameraVolume] Showing actor: %s (restore to originally hidden: %s)"),
+                *Actor->GetName(),
+                bWasOriginallyHidden ? TEXT("YES") : TEXT("NO"));
+
+            // Solo mostrar si no estaba oculto originalmente
+            Actor->SetActorHiddenInGame(bWasOriginallyHidden);
+        }
+    }
+}

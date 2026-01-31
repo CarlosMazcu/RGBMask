@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BoxComponent.h"
+#include "GameFramework/Volume.h"
 #include "CameraVolume.generated.h"
 
 UCLASS()
@@ -22,12 +22,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ToolTip = "Margen adicional que permite a la cámara salirse del volumen"))
 	FVector CameraMargin = FVector(200.0f, 200.0f, 0.0f);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ToolTip = "Actores que se ocultaran cuando este volumen este activo"))
+	TArray<AActor*> HiddenActors;
+
 	void GetVolumeBounds(FVector& OutMin, FVector& OutMax) const;
 
 	bool IsLocationInsideVolume(const FVector& Location) const;
 
 	void GetCameraBounds(FVector& OutMin, FVector& OutMax) const;
 
+	void HideActors();
+
+	void ShowActors();
 
 protected:
 	// Called when the game starts or when spawned
@@ -36,5 +42,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+private:
+	// Track which actors were originally hidden so we don't show them when switching volumes
+	TMap<AActor*, bool> OriginalVisibilityState;
 
 };

@@ -25,6 +25,9 @@ protected:
     ACameraVolume* ActiveCameraVolume;
 
     UPROPERTY()
+    ACameraVolume* PreviousCameraVolume;
+
+    UPROPERTY()
     TArray<ACameraVolume*> CameraVolumes;
 
     // Camera offset settings
@@ -51,6 +54,9 @@ protected:
     void ClampCameraToVolume(FVector& CameraLocation);
 
     void ApplyCameraOffset(FTViewTarget& OutVT, const FVector& PlayerLocation);
+
+    // Manejar el cambio de volumen activo
+    void HandleVolumeChange(ACameraVolume* NewVolume);
 
 private:
     bool bVolumesInitialized = false;
