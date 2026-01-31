@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "MaskTypes.h"
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 #include "MaskVisibilityComponent.generated.h"
 
 UENUM(BlueprintType)
@@ -18,6 +20,7 @@ class UMaskVisibilityComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
+    UMaskVisibilityComponent();
     UPROPERTY(EditAnywhere, Category = "Mask")
     TArray<EMaskType> HiddenInMask;
 
@@ -40,4 +43,16 @@ public:
 protected:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+private:
+    UPROPERTY(VisibleDefaultsOnly, Category = "Mask|FX")
+    TObjectPtr<class UNiagaraSystem> HideFX = nullptr;
+
+    UPROPERTY(EditAnywhere, Category = "Mask|FX")
+    FVector HideFXOffset = FVector::ZeroVector;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UNiagaraComponent> ActiveHideFXComponent = nullptr;
+
+    bool bWasHidden = false;
 };
