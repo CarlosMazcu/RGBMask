@@ -36,6 +36,16 @@ bool ACameraVolume::IsLocationInsideVolume(const FVector& Location) const
     return VolumeBox.IsInside(Location);
 }
 
+void ACameraVolume::GetCameraBounds(FVector& OutMin, FVector& OutMax) const
+{
+    // Obtener los límites base del volumen
+    GetVolumeBounds(OutMin, OutMax);
+
+    // Expandir los límites con el margen de cámara
+    OutMin -= CameraMargin;
+    OutMax += CameraMargin;
+}
+
 // Called when the game starts or when spawned
 void ACameraVolume::BeginPlay()
 {

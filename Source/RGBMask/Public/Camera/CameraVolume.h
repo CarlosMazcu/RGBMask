@@ -22,9 +22,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	int32 Priority = 0; // posible mejora volumenes superpuestos
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ToolTip = "Margen adicional que permite a la cámara salirse del volumen"))
+	FVector CameraMargin = FVector(200.0f, 200.0f, 0.0f);
+
 	void GetVolumeBounds(FVector& OutMin, FVector& OutMax) const;
 
 	bool IsLocationInsideVolume(const FVector& Location) const;
+
+	void GetCameraBounds(FVector& OutMin, FVector& OutMax) const;
 
 
 protected:

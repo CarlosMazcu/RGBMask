@@ -37,7 +37,11 @@ private:
 	TObjectPtr<UMaterialInterface> MainMaterial;
 	int32 MaskMaterialIndex = 0;
 
-	
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float CameraDistance = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float CameraPitch = -60.f;
 
 
 public:
