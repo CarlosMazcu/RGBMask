@@ -203,7 +203,13 @@ void ATrapSplineMover::SetTrapTransformAtDistance(float InDistance, float DeltaS
                 bActive = false;
             }
             ScheduleResetWallTrap(DefaultResetDelay);
- 
+            if (UWorld* World = GetWorld()){
+                if (UCameraShakeSubsystem* ShakeSub = World->GetSubsystem<UCameraShakeSubsystem>())
+                {
+                    ShakeSub->PlayImpactShake(1.0f);
+                    // o ShakeSub->PlayShake(MyShakeClass, 1.2f);
+                }
+            }
             UE_LOG(LogTemp, Warning, TEXT("Trampa golpeó a %s"), *Char->GetName());
         }
     }
