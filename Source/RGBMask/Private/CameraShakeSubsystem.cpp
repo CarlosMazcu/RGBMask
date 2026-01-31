@@ -17,44 +17,55 @@ UCameraShakeSubsystem::UCameraShakeSubsystem()
     }
 }
 
-void UCameraShakeSubsystem::PlayShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale, APlayerController* SpecificPC)
+
+void UCameraShakeSubsystem::PlayShake(float Scale, float CooldownSeconds, FVector WorldSource, float InnerRadius, float OuterRadius, float MinScale, float MaxScale)
 {
-    if (!ShakeClass) return;
     UWorld* World = GetWorld();
-    if (!World) return;
+    if (!World || !DefaultImpactShake) return;
 
-    // 1) Si te pasan un PC concreto, úsalo
-    if (SpecificPC)
+    // Cooldown por shake
+    const double Now = World->GetTimeSeconds();
+    if (CooldownSeconds > 0.f)
     {
-        if (SpecificPC->IsLocalController() && SpecificPC->PlayerCameraManager)
+        const double* LastPtr = LastPlayTimeByShake.Find(DefaultImpactShake);
+        if (LastPtr && (Now - *LastPtr) < CooldownSeconds)
         {
-            SpecificPC->PlayerCameraManager->StartCameraShake(ShakeClass, Scale);
+            return;
         }
-        return;
     }
+
     APlayerController* PC0 = UGameplayStatics::GetPlayerController(World, 0);
-    // 2) Si no, en singleplayer: PlayerController 0
-    UCameraShakeBase* Started = PC0->PlayerCameraManager->StartCameraShake(ShakeClass, Scale);
-    UE_LOG(LogTemp, Warning, TEXT("Shake started? %s"), Started ? TEXT("YES") : TEXT("NO"));
+    if (!PC0 || !PC0->IsLocalController() || !PC0->PlayerCameraManager) return;
 
-    if (Started)
+    float FinalScale = Scale;
+
+    // Falloff por distancia si OuterRadius > InnerRadius y WorldSource válido
+    const bool bUseFalloff =
+        !WorldSource.IsNearlyZero() &&
+        (OuterRadius > InnerRadius) &&
+        (OuterRadius > 0.f);
+
+    if (bUseFalloff)
     {
-        if (PC0->IsLocalController() && PC0->PlayerCameraManager)
-        {
-            PC0->PlayerCameraManager->StartCameraShake(ShakeClass, Scale);
-        }
+        const FVector CamLoc = PC0->PlayerCameraManager->GetCameraLocation();
+        const float Dist = FVector::Dist(CamLoc, WorldSource);
+
+        // Dist <= inner => 1; Dist >= outer => 0
+        const float Alpha = FMath::Clamp((Dist - InnerRadius) / (OuterRadius - InnerRadius), 0.f, 1.f);
+        const float Falloff = 1.f - Alpha;
+
+        FinalScale *= Falloff;
+    }
+
+    FinalScale = FMath::Clamp(FinalScale, MinScale, MaxScale);
+    if (FinalScale <= KINDA_SMALL_NUMBER) return;
+
+    PC0->PlayerCameraManager->StartCameraShake(DefaultImpactShake, FinalScale);
+
+    if (CooldownSeconds > 0.f)
+    {
+        LastPlayTimeByShake.Add(DefaultImpactShake, Now);
     }
 }
 
-void UCameraShakeSubsystem::PlayImpactShake(float Scale, APlayerController* SpecificPC)
-{
-    PlayShake(DefaultImpactShake, Scale, SpecificPC);
-}
-
-void UCameraShakeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-    Super::Initialize(Collection);
-
-
-}
 

@@ -71,6 +71,9 @@ void ARGBMaskPlayerController::SetupInputComponent()
 			EnhancedInputComponent->BindAction(BlueMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeBlueMask);
 			EnhancedInputComponent->BindAction(GreenMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeGreenMask);
 
+			EnhancedInputComponent->BindAction(CameraShake, ETriggerEvent::Triggered, this, &ARGBMaskPlayerController::OnCameraShake);
+
+
 
 		}
 		else
@@ -211,7 +214,7 @@ void ARGBMaskPlayerController::OnCameraShake()
 	{
 		if (UCameraShakeSubsystem* ShakeSub = w->GetSubsystem<UCameraShakeSubsystem>()) 
 		{
-			ShakeSub->PlayImpactShake(10.0f);
+			ShakeSub->PlayShake();
 		}
 	}
 }
