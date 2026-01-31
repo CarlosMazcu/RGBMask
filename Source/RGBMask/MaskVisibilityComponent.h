@@ -30,6 +30,73 @@ public:
     UPROPERTY(EditAnywhere, Category = "Mask", meta = (EditCondition = "VisibilityMode == EMaskVisibilityMode::ShowOnlyInMasks", EditConditionHides))
     TArray<EMaskType> VisibleInMask;
 
+    // --- Getters ---
+    UFUNCTION(BlueprintPure, Category = "Mask|Visibility")
+    const TArray<EMaskType>& GetHiddenInMask() const { return HiddenInMask; }
+
+    UFUNCTION(BlueprintPure, Category = "Mask|Visibility")
+    EMaskVisibilityMode GetVisibilityMode() const { return VisibilityMode; }
+
+    UFUNCTION(BlueprintPure, Category = "Mask|Visibility")
+    const TArray<EMaskType>& GetVisibleInMask() const { return VisibleInMask; }
+
+
+    // --- Setters ---
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void SetHiddenInMask(const TArray<EMaskType>& NewHiddenInMask)
+    {
+        HiddenInMask = NewHiddenInMask;
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void SetVisibilityMode(EMaskVisibilityMode NewMode)
+    {
+        VisibilityMode = NewMode;
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void SetVisibleInMask(const TArray<EMaskType>& NewVisibleInMask)
+    {
+        VisibleInMask = NewVisibleInMask;
+    }
+
+
+    // --- Helpers opcionales (útiles) ---
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void AddHiddenMask(EMaskType Mask)
+    {
+        HiddenInMask.AddUnique(Mask);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void RemoveHiddenMask(EMaskType Mask)
+    {
+        HiddenInMask.Remove(Mask);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void ClearHiddenMasks()
+    {
+        HiddenInMask.Reset();
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void AddVisibleMask(EMaskType Mask)
+    {
+        VisibleInMask.AddUnique(Mask);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void RemoveVisibleMask(EMaskType Mask)
+    {
+        VisibleInMask.Remove(Mask);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
+    void ClearVisibleMasks()
+    {
+        VisibleInMask.Reset();
+    }
 
     UPROPERTY(EditAnywhere, Category = "Mask")
     bool bDisableCollisionWhenHidden = true;
