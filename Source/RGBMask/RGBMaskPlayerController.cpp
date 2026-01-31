@@ -156,17 +156,22 @@ void ARGBMaskPlayerController::OnMove(const FInputActionValue& Value)
 void ARGBMaskPlayerController::OnChangeRedMask()
 {
 	ToggleMask(EMaskType::Red);
+	UE_LOG(LogRGBMask, Error, TEXT("Mask Red"));
+
 }
 
 void ARGBMaskPlayerController::OnChangeBlueMask()
 {
 	ToggleMask(EMaskType::Blue);
+	UE_LOG(LogRGBMask, Error, TEXT("Mask Blue"));
+
 
 }
 
 void ARGBMaskPlayerController::OnChangeGreenMask()
 {
 	ToggleMask(EMaskType::Green);
+	UE_LOG(LogRGBMask, Error, TEXT("Mask Green"));
 
 }
 

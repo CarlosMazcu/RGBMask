@@ -34,16 +34,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Mask")
 	EMaskType CurrentMask = EMaskType::Red;
 
-	// --- Materiales por máscara (asignas en el editor) ---
-	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
-	TObjectPtr<UMaterialInterface> RedMaskMaterial;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
-	TObjectPtr<UMaterialInterface> GreenMaskMaterial;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Mask|Materials")
-	TObjectPtr<UMaterialInterface> BlueMaskMaterial;
-
 public:
 
 	/** Constructor */
