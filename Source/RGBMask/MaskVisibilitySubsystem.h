@@ -17,7 +17,7 @@ public:
     void Register(UMaskVisibilityComponent* Comp);
     void Unregister(UMaskVisibilityComponent* Comp);
 
-    EMaskType GetCurrentMask() const { return CurrentMask; }   // <-- NUEVO
+    EMaskType GetCurrentMask() const { return CurrentMask; }   
 
 private:
     void EnsureBoundToPlayer();

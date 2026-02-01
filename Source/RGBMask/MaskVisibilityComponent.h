@@ -61,6 +61,7 @@ public:
     }
 
 
+
     // --- Helpers opcionales (útiles) ---
     UFUNCTION(BlueprintCallable, Category = "Mask|Visibility")
     void AddHiddenMask(EMaskType Mask)
@@ -104,12 +105,20 @@ public:
     UPROPERTY(EditAnywhere, Category = "Mask")
     bool bDisableTickWhenHidden = false;
 
+    UPROPERTY(EditAnywhere, Category = "Mask|FX")
+    bool bPersistentFXWhileHidden = false;
+
+    UPROPERTY(EditAnywhere, Category = "Mask|FX", meta = (EditCondition = "bPersistentFXWhileHidden"))
+    bool bFollowFXToOwnerWhileHidden = true;
+
     void ApplyMask(EMaskType Mask, bool bAllowFX = true);
 
 
 protected:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 
 private:
     UPROPERTY(VisibleDefaultsOnly, Category = "Mask|FX")
