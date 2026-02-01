@@ -2,6 +2,7 @@
 
 #include "RGBMaskCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "RGBMaskGameInstance.h"   
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,11 +10,134 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Materials/Material.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/World.h"
 #include "Engine/PostProcessVolume.h"
 #include "Materials/MaterialInstance.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+
+
+void ARGBMaskCharacter::Die()
+{
+	if (bIsDead) return;
+	bIsDead = true;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	// Parar movimiento y deshabilitar movement (opcional)
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->StopMovementImmediately();
+		MoveComp->DisableMovement();
+	}
+
+	// ✅ Bloquea TODO el input (incluye acciones del PlayerController)
+	PushDeathInputBlocker(PC);
+
+	// (Extra) ignora movimiento/look por si acaso
+	PC->SetIgnoreMoveInput(true);
+	PC->SetIgnoreLookInput(true);
+
+	// Fade a negro
+	if (PC->PlayerCameraManager)
+	{
+		PC->PlayerCameraManager->StartCameraFade(
+			0.f, 1.f, DeathFadeDuration, FLinearColor::Black,
+			false,
+			true
+		);
+	}
+
+	// Widget YOU DIED
+	if (DeathWidgetClass && !DeathWidgetInstance)
+	{
+		DeathWidgetInstance = CreateWidget<UUserWidget>(PC, DeathWidgetClass);
+		if (DeathWidgetInstance)
+		{
+			DeathWidgetInstance->AddToViewport(9999);
+		}
+	}
+
+	// Timer -> LoadGame (BP en GameInstance)
+	GetWorldTimerManager().SetTimer(
+		DeathTimerHandle,
+		this,
+		&ARGBMaskCharacter::HandleDeathReload,
+		DeathReloadDelay,
+		false
+	);
+}
+
+void ARGBMaskCharacter::PushDeathInputBlocker(APlayerController* PC)
+{
+	if (!PC) return;
+
+	if (!DeathInputBlocker)
+	{
+		DeathInputBlocker = NewObject<UInputComponent>(this, TEXT("DeathInputBlocker"));
+		DeathInputBlocker->bBlockInput = true;
+		DeathInputBlocker->Priority = 100000; 
+		DeathInputBlocker->RegisterComponent();
+	}
+
+	PC->PushInputComponent(DeathInputBlocker);
+}
+
+void ARGBMaskCharacter::PopDeathInputBlocker(APlayerController* PC)
+{
+	if (!PC || !DeathInputBlocker) return;
+
+	PC->PopInputComponent(DeathInputBlocker);
+	DeathInputBlocker->DestroyComponent();
+	DeathInputBlocker = nullptr;
+}
+
+void ARGBMaskCharacter::HandleDeathReload()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	// Llama al LoadGame implementado en BP_GameInstance
+	if (URGBMaskGameInstance* GI = GetGameInstance<URGBMaskGameInstance>())
+	{
+		GI->LoadGame();
+	}
+
+	// Restaurar input (si LoadGame hace OpenLevel, esto no molesta; si no cambia de nivel, esto es necesario)
+	if (PC)
+	{
+		PopDeathInputBlocker(PC);
+
+		PC->SetIgnoreMoveInput(false);
+		PC->SetIgnoreLookInput(false);
+
+		// Quitar fade si sigues en el mismo nivel
+		if (PC->PlayerCameraManager)
+		{
+			PC->PlayerCameraManager->StartCameraFade(
+				1.f, 0.f, 0.25f, FLinearColor::Black,
+				false,
+				false
+			);
+		}
+	}
+
+	// Quitar UI
+	if (DeathWidgetInstance)
+	{
+		DeathWidgetInstance->RemoveFromParent();
+		DeathWidgetInstance = nullptr;
+	}
+
+	// Reactivar movimiento si sigues en el mismo pawn
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->SetMovementMode(MOVE_Walking);
+	}
+
+	bIsDead = false;
+}
 
 
 ARGBMaskCharacter::ARGBMaskCharacter()

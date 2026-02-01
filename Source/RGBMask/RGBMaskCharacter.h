@@ -11,6 +11,9 @@
 class UCameraComponent;
 class USpringArmComponent;
 class APostProcessVolume;
+class UUserWidget;
+class UInputComponent;
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaskChanged, EMaskType, MaskType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaskChangeStarted, EMaskType, MaskType);
@@ -72,6 +75,9 @@ private:
 
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Death")
+	void Die();
+
 
 	/** Constructor */
 	ARGBMaskCharacter();
@@ -155,5 +161,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Mask|PostProcess|Debug")
 	void ForceUpdatePostProcess();
 
+	// ============================================
+// DEATH SYSTEM
+// ============================================
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "Death|UI")
+	TSubclassOf<UUserWidget> DeathWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> DeathWidgetInstance = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Death|Flow", meta = (ClampMin = "0.0"))
+	float DeathFadeDuration = 0.6f;
+
+	UPROPERTY(EditAnywhere, Category = "Death|Flow", meta = (ClampMin = "0.0"))
+	float DeathReloadDelay = 1.5f;
+
+	bool bIsDead = false;
+	FTimerHandle DeathTimerHandle;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UInputComponent> DeathInputBlocker = nullptr;
+
+	void PushDeathInputBlocker(class APlayerController* PC);
+	void PopDeathInputBlocker(class APlayerController* PC);
+
+	void HandleDeathReload();
 
 };
