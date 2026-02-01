@@ -32,8 +32,6 @@ void ARGBMaskCharacter::Die()
 		MoveComp->StopMovementImmediately();
 		MoveComp->DisableMovement();
 	}
-
-	// ✅ Bloquea TODO el input (incluye acciones del PlayerController)
 	PushDeathInputBlocker(PC);
 
 	// (Extra) ignora movimiento/look por si acaso
@@ -68,6 +66,7 @@ void ARGBMaskCharacter::Die()
 		DeathReloadDelay,
 		false
 	);
+	OnPlayerDead.Broadcast();
 }
 
 void ARGBMaskCharacter::PushDeathInputBlocker(APlayerController* PC)
@@ -297,13 +296,10 @@ void ARGBMaskCharacter::Tick(float DeltaSeconds)
 
 void ARGBMaskCharacter::SetMask(EMaskType NewMask)
 {
-	// Si ya estamos en el proceso de cambiar a esta m�scara, no hacemos nada
 	if (bIsMaskChangeInProgress && PendingMask == NewMask) return;
 
-	// Si ya tenemos esta m�scara puesta y no hay cambio pendiente, no hacemos nada
 	if (!bIsMaskChangeInProgress && CurrentMask == NewMask) return;
 
-	// Cancelar cualquier cambio de m�scara pendiente
 	if (bIsMaskChangeInProgress)
 	{
 		if (UWorld* World = GetWorld())
@@ -313,11 +309,9 @@ void ARGBMaskCharacter::SetMask(EMaskType NewMask)
 		bIsMaskChangeInProgress = false;
 	}
 
-	// Guardar la m�scara pendiente
 	PendingMask = NewMask;
 	bIsMaskChangeInProgress = true;
 
-	// Disparar el evento de inicio del cambio (aqu� se puede poner la animaci�n en el futuro)
 	OnMaskChangeStarted.Broadcast(NewMask);
 
 	if (bUseSmoothBlending && bUsePostProcessEffects)
@@ -325,14 +319,12 @@ void ARGBMaskCharacter::SetMask(EMaskType NewMask)
 		StartPostProcessBlend();
 	}
 
-	// Si el delay es 0 o menor, aplicar el cambio inmediatamente
 	if (MaskChangeDelay <= 0.0f)
 	{
 		ApplyMaskChange();
 		return;
 	}
 
-	// Programar el cambio de m�scara despu�s del delay
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimer(

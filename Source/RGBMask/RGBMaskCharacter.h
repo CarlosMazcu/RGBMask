@@ -17,6 +17,7 @@ class UInputComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaskChanged, EMaskType, MaskType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaskChangeStarted, EMaskType, MaskType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDead);
 
 /**
  *  A controllable top-down perspective character
@@ -144,6 +145,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnMaskChangeStarted OnMaskChangeStarted;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerDead OnPlayerDead;
 
 	TMap<EMaskType, bool> Masks;
 
