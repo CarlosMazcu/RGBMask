@@ -7,6 +7,8 @@
 
 UMaskVisibilityComponent::UMaskVisibilityComponent()
 {
+    PrimaryComponentTick.bCanEverTick = true;
+    PrimaryComponentTick.bStartWithTickEnabled = false; 
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FX(
         TEXT("/Game/Art/VFX/NS_MaskHide.NS_MaskHide")
     );
@@ -62,6 +64,25 @@ void UMaskVisibilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
+void UMaskVisibilityComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (!bPersistentFXWhileHidden || !bFollowFXToOwnerWhileHidden)
+        return;
+
+    if (!bWasHidden || !ActiveHideFXComponent)
+        return;
+
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    const FVector NewLoc = Owner->GetActorLocation() + HideFXOffset;
+    const FRotator NewRot = Owner->GetActorRotation();
+
+    ActiveHideFXComponent->SetWorldLocationAndRotation(NewLoc, NewRot, false, nullptr, ETeleportType::TeleportPhysics);
+}
+
 
 
 void UMaskVisibilityComponent::ApplyMask(EMaskType Mask, bool bAllowFX)
@@ -77,7 +98,6 @@ void UMaskVisibilityComponent::ApplyMask(EMaskType Mask, bool bAllowFX)
     case EMaskVisibilityMode::ShowOnlyInMasks:
         bShouldBeHidden = !VisibleInMask.Contains(Mask);
         break;
-
     default:
         break;
     }
@@ -85,21 +105,14 @@ void UMaskVisibilityComponent::ApplyMask(EMaskType Mask, bool bAllowFX)
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // --- FX solo si hay transición ---
     const bool bChangingState = (bShouldBeHidden != bWasHidden);
-    if (!bAllowFX)
-    {
-        if (ActiveHideFXComponent)
-        {
-            ActiveHideFXComponent->DeactivateImmediate();
-            ActiveHideFXComponent->DestroyComponent();
-            ActiveHideFXComponent = nullptr;
-        }
-    }
-    else if (bChangingState)
+
+    // --- 1) FX persistente mientras está oculto (ideal para projectiles + pooling) ---
+    if (bPersistentFXWhileHidden)
     {
         if (bShouldBeHidden)
         {
+            // Asegurar que exista el FX aunque NO haya transición (pooling)
             if (HideFX && !ActiveHideFXComponent)
             {
                 const FVector SpawnLoc = Owner->GetActorLocation() + HideFXOffset;
@@ -111,21 +124,42 @@ void UMaskVisibilityComponent::ApplyMask(EMaskType Mask, bool bAllowFX)
                     SpawnLoc,
                     SpawnRot,
                     FVector(1.f),
-                    false,
-                    false,
+                    false,   // bAutoDestroy
+                    false,   // bAutoActivate
                     ENCPoolMethod::None,
                     true
                 );
                 if (ActiveHideFXComponent)
                 {
-                    const FLinearColor FXColor = GetFXColorForMask(Mask);
-
-                    ActiveHideFXComponent->SetVariableLinearColor(MaskColorParamName, FXColor);
+                    ActiveHideFXComponent->SetVariableLinearColor(MaskColorParamName, GetFXColorForMask(Mask));
                     ActiveHideFXComponent->Activate(true);
                 }
             }
+            else if (ActiveHideFXComponent)
+            {
+                // si cambias de máscara estando oculto, actualiza color
+                ActiveHideFXComponent->SetVariableLinearColor(MaskColorParamName, GetFXColorForMask(Mask));
+            }
+
+            // activar tick solo si hay que seguir al owner
+            SetComponentTickEnabled(bFollowFXToOwnerWhileHidden);
         }
         else
+        {
+            // si vuelve a aparecer, mata el FX persistente
+            if (ActiveHideFXComponent)
+            {
+                ActiveHideFXComponent->DeactivateImmediate();
+                ActiveHideFXComponent->DestroyComponent();
+                ActiveHideFXComponent = nullptr;
+            }
+            SetComponentTickEnabled(false);
+        }
+    }
+    // --- 2) FX “solo en transición” (tu comportamiento anterior) ---
+    else
+    {
+        if (!bAllowFX)
         {
             if (ActiveHideFXComponent)
             {
@@ -134,8 +168,48 @@ void UMaskVisibilityComponent::ApplyMask(EMaskType Mask, bool bAllowFX)
                 ActiveHideFXComponent = nullptr;
             }
         }
+        else if (bChangingState)
+        {
+            if (bShouldBeHidden)
+            {
+                if (HideFX && !ActiveHideFXComponent)
+                {
+                    const FVector SpawnLoc = Owner->GetActorLocation() + HideFXOffset;
+                    const FRotator SpawnRot = Owner->GetActorRotation();
+
+                    ActiveHideFXComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                        GetWorld(),
+                        HideFX,
+                        SpawnLoc,
+                        SpawnRot,
+                        FVector(1.f),
+                        false,
+                        false,
+                        ENCPoolMethod::None,
+                        true
+                    );
+                    if (ActiveHideFXComponent)
+                    {
+                        ActiveHideFXComponent->SetVariableLinearColor(MaskColorParamName, GetFXColorForMask(Mask));
+                        ActiveHideFXComponent->Activate(true);
+                    }
+                }
+            }
+            else
+            {
+                if (ActiveHideFXComponent)
+                {
+                    ActiveHideFXComponent->DeactivateImmediate();
+                    ActiveHideFXComponent->DestroyComponent();
+                    ActiveHideFXComponent = nullptr;
+                }
+            }
+        }
+
+        SetComponentTickEnabled(false); // no follow en modo transición
     }
 
+    // --- Visibilidad “core” (no lo tocamos) ---
     Owner->SetActorHiddenInGame(bShouldBeHidden);
 
     if (bDisableCollisionWhenHidden)
