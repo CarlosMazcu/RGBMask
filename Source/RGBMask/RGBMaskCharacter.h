@@ -175,7 +175,7 @@ public:
 	float DeathFadeDuration = 0.6f;
 
 	UPROPERTY(EditAnywhere, Category = "Death|Flow", meta = (ClampMin = "0.0"))
-	float DeathReloadDelay = 1.5f;
+	float DeathReloadDelay = 2.3f;
 
 	bool bIsDead = false;
 	FTimerHandle DeathTimerHandle;
