@@ -6,7 +6,7 @@
 
 class UCameraShakeBase;
 
-UCLASS()
+UCLASS(BlueprintType)
 class RGBMASK_API UCameraShakeSubsystem : public UWorldSubsystem
 {
     GENERATED_BODY()
