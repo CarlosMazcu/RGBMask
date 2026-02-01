@@ -16,6 +16,10 @@
 #include "Kismet/GameplayStatics.h"
 
 
+void ARGBMaskCharacter::Die()
+{
+}
+
 ARGBMaskCharacter::ARGBMaskCharacter()
 {
 	// Set size for player capsule
