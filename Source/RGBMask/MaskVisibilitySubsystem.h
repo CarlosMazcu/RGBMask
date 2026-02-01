@@ -17,6 +17,8 @@ public:
     void Register(UMaskVisibilityComponent* Comp);
     void Unregister(UMaskVisibilityComponent* Comp);
 
+    UFUNCTION(BlueprintCallable)
+
     EMaskType GetCurrentMask() const { return CurrentMask; }   
 
 private:
