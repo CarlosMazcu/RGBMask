@@ -125,7 +125,13 @@ void ATrapSplineMover::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp
     if (Cast<ACharacter>(OtherActor))
     {
         bActive = true;
-
+        if (UWorld* w = GetWorld())
+        {
+            if (UCameraShakeSubsystem* ShakeSub = w->GetSubsystem<UCameraShakeSubsystem>())
+            {
+                ShakeSub->PlayShake(15.0f, 0.3f, FVector::ZeroVector, 0.0f, 0.0f, 0.0f, 25.0f, true, 20.0f, 8.0f, 0.0f, 30.0f);
+            }
+        }
         // desactivar trigger para que no re-dispare
         StartTrigger->SetGenerateOverlapEvents(false);
         StartTrigger->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -221,13 +227,7 @@ void ATrapSplineMover::SetTrapTransformAtDistance(float InDistance, float DeltaS
             ScheduleResetWallTrap(DefaultResetDelay);
  
             Char->Die();
-            if (UWorld* w = GetWorld())
-            {
-                if (UCameraShakeSubsystem* ShakeSub = w->GetSubsystem<UCameraShakeSubsystem>())
-                {
-                    ShakeSub->PlayShake(15.0f,0.3f, FVector::ZeroVector, 0.0f, 0.0f, 0.0f, 25.0f, true, 20.0f, 0.4f, 0.0f, 30.0f);
-                }
-            }
+
             if (DeathSFX)
             {
                 UGameplayStatics::PlaySound2D(this, DeathSFX, 1.0f);
