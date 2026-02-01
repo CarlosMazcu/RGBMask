@@ -72,6 +72,9 @@ private:
 
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Death")
+	void Die();
+
 
 	/** Constructor */
 	ARGBMaskCharacter();
