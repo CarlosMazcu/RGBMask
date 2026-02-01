@@ -22,6 +22,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Reset")
     void ScheduleResetWallTrap(float DelaySeconds);
+    UPROPERTY(EditDefaultsOnly, Category = "Audio")
+    TObjectPtr<USoundBase> DeathSFX;
+
 
 protected:
     virtual void BeginPlay() override;

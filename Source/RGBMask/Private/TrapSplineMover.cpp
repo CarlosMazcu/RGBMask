@@ -2,9 +2,13 @@
 #include "TimerManager.h"
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "RGBMaskCharacter.h"
 #include "Components/BoxComponent.h"
 #include "CameraShakeSubsystem.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
+
 
 ATrapSplineMover::ATrapSplineMover()
 {
@@ -133,6 +137,7 @@ void ATrapSplineMover::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
 
     if (!bActive || !Spline || !TrapMesh) return;
+    IsInTheEnd = false;
 
     const float SplineLen = Spline->GetSplineLength();
     if (SplineLen <= KINDA_SMALL_NUMBER) return;
@@ -142,6 +147,7 @@ void ATrapSplineMover::Tick(float DeltaSeconds)
     // Manejo fin de spline
     if (Distance >= SplineLen)
     {
+        IsInTheEnd = true;
         if (bReverseAtEnd)
         {
             Distance = SplineLen;
@@ -174,7 +180,16 @@ void ATrapSplineMover::Tick(float DeltaSeconds)
             bActive = false;
         }
     }
-
+    if (bActive) 
+    {
+        if (UWorld* w = GetWorld())
+        {
+            if (UCameraShakeSubsystem* ShakeSub = w->GetSubsystem<UCameraShakeSubsystem>())
+            {
+                ShakeSub->PlayShake(7.0f, 0.1f, FVector::ZeroVector, 0.0f, 0.0f, 0.0f, 5.0f, true, 7.0f, 0.1f, 0.0f, 10.0f);
+            }
+        }
+    }
     SetTrapTransformAtDistance(Distance, DeltaSeconds);
 }
 
@@ -188,8 +203,9 @@ void ATrapSplineMover::SetTrapTransformAtDistance(float InDistance, float DeltaS
 
     if (bSweepCollision && Hit.bBlockingHit)
     {
-        if (ACharacter* Char = Cast<ACharacter>(Hit.GetActor()))
+        if (ARGBMaskCharacter* Char = Cast<ARGBMaskCharacter>(Hit.GetActor()))
         {
+
             MeshShakeTimeLeft = MeshShakeDuration;
 
             if (bDisableMeshCollisionOnPawnHit && !bHasDisabledMeshCollision)
@@ -204,7 +220,19 @@ void ATrapSplineMover::SetTrapTransformAtDistance(float InDistance, float DeltaS
             }
             ScheduleResetWallTrap(DefaultResetDelay);
  
-            UE_LOG(LogTemp, Warning, TEXT("Trampa golpeó a %s"), *Char->GetName());
+            Char->Die();
+            if (UWorld* w = GetWorld())
+            {
+                if (UCameraShakeSubsystem* ShakeSub = w->GetSubsystem<UCameraShakeSubsystem>())
+                {
+                    ShakeSub->PlayShake(15.0f,0.3f, FVector::ZeroVector, 0.0f, 0.0f, 0.0f, 25.0f, true, 20.0f, 0.4f, 0.0f, 30.0f);
+                }
+            }
+            if (DeathSFX)
+            {
+                UGameplayStatics::PlaySound2D(this, DeathSFX, 1.0f);
+            }
+
         }
     }
 

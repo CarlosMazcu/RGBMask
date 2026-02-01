@@ -44,7 +44,7 @@ private:
 	EMaskType PendingMask = EMaskType::None;
 
 	UPROPERTY(EditAnywhere, Category = "Mask", meta = (ClampMin = "0.0"))
-	float MaskChangeDelay = 0.5f;
+	float MaskChangeDelay = 0.1f;
 
 	FTimerHandle MaskChangeTimerHandle;
 	bool bIsMaskChangeInProgress = false;

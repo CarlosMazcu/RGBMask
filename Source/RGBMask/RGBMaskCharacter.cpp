@@ -345,7 +345,7 @@ void ARGBMaskCharacter::ApplyMaskChange()
 	if (CurrentMask == PendingMask) return;
 
 	CurrentMask = PendingMask;
-	TObjectPtr<UMaterialInterface> ChosenMat;
+	/*TObjectPtr<UMaterialInterface> ChosenMat;
 
 	switch (CurrentMask)
 	{
@@ -371,7 +371,7 @@ void ARGBMaskCharacter::ApplyMaskChange()
 
 		const int32 SafeIndex = FMath::Clamp(MaskMaterialIndex, 0, NumMats - 1);
 		MeshComp->SetMaterial(0, ChosenMat);
-	}
+	}*/
 	OnMaskChanged.Broadcast(CurrentMask);
 
 	// Update post process effect based on new mask (only if NOT using smooth blending)
