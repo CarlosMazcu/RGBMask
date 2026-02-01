@@ -39,7 +39,7 @@ void UMaskVisibilitySubsystem::EnsureBoundToPlayer()
     if (!Player) { ScheduleBindRetry(); return; }
 
     CachedPlayer = Player;
-    Player->OnMaskChanged.AddUObject(this, &UMaskVisibilitySubsystem::OnPlayerMaskChanged);
+    Player->OnMaskChanged.AddDynamic(this, &UMaskVisibilitySubsystem::OnPlayerMaskChanged);
     bBoundToPlayer = true;
 
     World->GetTimerManager().ClearTimer(RetryBindHandle);

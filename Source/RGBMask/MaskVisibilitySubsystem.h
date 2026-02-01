@@ -21,6 +21,7 @@ public:
 
 private:
     void EnsureBoundToPlayer();
+    UFUNCTION()
     void OnPlayerMaskChanged(EMaskType NewMask);
 
     void ApplyMaskToAll(bool bAllowFX);
