@@ -33,7 +33,7 @@ public:
      * @param MaxScale         Final scale clamp maximum (after falloff).
      */
     UFUNCTION(BlueprintCallable, Category = "Camera|Shake",
-        meta = (ToolTip = "Plays a global camera shake. Optional distance falloff using WorldSource + Inner/Outer radius."))
+        meta = (ToolTip = "Plays a global camera shake. Optional distance falloff using WorldSource + Inner/Outer radius. Also supports optional gamepad rumble (dynamic force feedback)."))
     void PlayShake(
         UPARAM(meta = (ToolTip = "Base intensity multiplier. 1.0 = normal.")) float Scale = 10.0f,
 
@@ -45,10 +45,21 @@ public:
 
         UPARAM(meta = (ToolTip = "Outer radius (cm). At or above this distance, intensity is 0. If Outer<=Inner, falloff is disabled.")) float OuterRadius = 0.0f,
 
-        UPARAM(meta = (ToolTip = "Final intensity clamp minimum (applied after falloff).")) float MinScale = 0.0f,
+        UPARAM(meta = (ToolTip = "Final camera intensity clamp minimum (after falloff).")) float MinScale = 0.0f,
 
-        UPARAM(meta = (ToolTip = "Final intensity clamp maximum (applied after falloff).")) float MaxScale = 20.0f
+        UPARAM(meta = (ToolTip = "Final camera intensity clamp maximum (after falloff).")) float MaxScale = 20.0f,
+
+        UPARAM(meta = (ToolTip = "Enable gamepad rumble. If no controller supports rumble, nothing happens.")) bool bPlayRumble = true,
+
+        UPARAM(meta = (ToolTip = "Rumble intensity (0..1) before falloff.")) float RumbleIntensity = 0.7f,
+
+        UPARAM(meta = (ToolTip = "Rumble duration in seconds.")) float RumbleDuration = 0.40f,
+
+        UPARAM(meta = (ToolTip = "Final rumble clamp minimum (after falloff).")) float MinRumble = 0.0f,
+
+        UPARAM(meta = (ToolTip = "Final rumble clamp maximum (after falloff).")) float MaxRumble = 1.0f
     );
+
 
 
 private:
