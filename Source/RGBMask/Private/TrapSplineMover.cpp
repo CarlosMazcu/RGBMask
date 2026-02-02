@@ -13,6 +13,7 @@
 ATrapSplineMover::ATrapSplineMover()
 {
     PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickGroup = TG_PostPhysics;
 
     Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
     RootComponent = Spline;
@@ -207,36 +208,60 @@ void ATrapSplineMover::SetTrapTransformAtDistance(float InDistance, float DeltaS
     FHitResult Hit;
     TrapMesh->SetWorldLocationAndRotation(NewLoc, NewRot, bSweepCollision, &Hit);
 
-    if (bSweepCollision && Hit.bBlockingHit)
-    {
-        if (ARGBMaskCharacter* Char = Cast<ARGBMaskCharacter>(Hit.GetActor()))
+    auto TryKill = [&](AActor* A)
         {
-
-            MeshShakeTimeLeft = MeshShakeDuration;
-
-            if (bDisableMeshCollisionOnPawnHit && !bHasDisabledMeshCollision)
+            if (!A) return;
+            if (ARGBMaskCharacter* Char = Cast<ARGBMaskCharacter>(A))
             {
-                TrapMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-                bHasDisabledMeshCollision = true;
-            }
+                MeshShakeTimeLeft = MeshShakeDuration;
 
-            if (bStopOnHit)
-            {
-                bActive = false;
-            }
-            ScheduleResetWallTrap(DefaultResetDelay);
- 
-            Char->Die();
+                if (bDisableMeshCollisionOnPawnHit && !bHasDisabledMeshCollision)
+                {
+                    TrapMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+                    bHasDisabledMeshCollision = true;
+                }
 
-            if (DeathSFX)
-            {
-                UGameplayStatics::PlaySound2D(this, DeathSFX, 1.0f);
-            }
+                if (bStopOnHit)
+                {
+                    bActive = false;
+                }
 
+                ScheduleResetWallTrap(DefaultResetDelay);
+                Char->Die();
+
+                if (DeathSFX)
+                {
+                    UGameplayStatics::PlaySound2D(this, DeathSFX, 1.0f);
+                }
+            }
+        };
+
+    if (!bSweepCollision)
+    {
+        // si no haces sweep, detecta por overlap
+        TArray<AActor*> Overlaps;
+        TrapMesh->GetOverlappingActors(Overlaps, ARGBMaskCharacter::StaticClass());
+        if (Overlaps.Num() > 0)
+        {
+            TryKill(Overlaps[0]);
         }
+        return;
     }
 
-    if (MeshShakeTimeLeft > 0.f && MeshShakeDuration > 0.f)
+    if (Hit.bBlockingHit || Hit.bStartPenetrating)
+    {
+        TryKill(Hit.GetActor());
+        return;
+    }
+
+    TArray<AActor*> Overlaps;
+    TrapMesh->GetOverlappingActors(Overlaps, ARGBMaskCharacter::StaticClass());
+    if (Overlaps.Num() > 0)
+    {
+        TryKill(Overlaps[0]);
+    }
+
+   /* if (MeshShakeTimeLeft > 0.f && MeshShakeDuration > 0.f)
     {
         MeshShakeTimeLeft = FMath::Max(0.f, MeshShakeTimeLeft - DeltaSeconds);
 
@@ -278,5 +303,5 @@ void ATrapSplineMover::SetTrapTransformAtDistance(float InDistance, float DeltaS
         SmoothedWorldOffset = FVector::ZeroVector;
         SmoothedRotOffset = FRotator::ZeroRotator;
     }
-
+    */
 }
