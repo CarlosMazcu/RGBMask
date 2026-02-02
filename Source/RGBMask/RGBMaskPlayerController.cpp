@@ -71,7 +71,7 @@ void ARGBMaskPlayerController::SetupInputComponent()
 			EnhancedInputComponent->BindAction(BlueMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeBlueMask);
 			EnhancedInputComponent->BindAction(GreenMask, ETriggerEvent::Started, this, &ARGBMaskPlayerController::OnChangeGreenMask);
 
-			//EnhancedInputComponent->BindAction(CameraShake, ETriggerEvent::Triggered, this, &ARGBMaskPlayerController::OnCameraShake);
+			EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Triggered, this, &ARGBMaskPlayerController::OnPause);
 
 
 

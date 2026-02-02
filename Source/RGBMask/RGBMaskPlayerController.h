@@ -65,6 +65,8 @@ protected:
 	TObjectPtr<UInputAction> GreenMask;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> CameraShake;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> PauseAction;
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
@@ -98,6 +100,8 @@ protected:
 	void OnChangeBlueMask();
 	void OnChangeGreenMask();
 	void OnCameraShake();
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Save")
+	void OnPause();
 
 	void ToggleMask(EMaskType DesiredMask, class ARGBMaskCharacter* MaskCharacter);
 
